@@ -7,11 +7,11 @@ Mopidy Client via JSON/RPC Websocket interface
 This module generates a python interface which maps the `Mopidy Core API <https://mopidy.readthedocs.org/en/latest/api/core>`_ methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core <https://mopidy.readthedocs.org/en/latest/api/core>`_ .
 It makes use of `websocket_client <https://github.com/liris/websocket_client>`_  
 
-Current version maps Mopidy 1.1.2. Next versions may break the functionality.
-Some methods marked as deprecated by Mopidy API has not been included.
+Current version maps Mopidy 1.1.2 JSON/RPC API. 
+If API methods change the API controllers should be generated using 'generate_api.py'
+
 
 Pending features:
-  - implement PlaylistController methods
   - exception and error handling
   - some refactoring needed
   - check for mopidy JSON/RPC version and methods
@@ -45,6 +45,10 @@ Project resources
 
 Changelog
 =========
+
+v0.3.0 (UNRELEASED)
+----------------------------------------
+- Mopidy controllers API can be automatically generated
 
 v0.2.0 (UNRELEASED)
 ----------------------------------------
