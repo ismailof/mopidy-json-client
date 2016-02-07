@@ -4,11 +4,10 @@ Mopidy-JSON-Client
 
 Mopidy Client via JSON/RPC Websocket interface
 
-This module is u
+This module generates a python interface which maps the Mopidy Core API<mopidy.readthedocs.org/en/latest/api/core> methods and events, as described in mopidy.readthedocs.org/en/latest/api/core .
 
-Current features include:
-  - Remote Playback Control (play/pause/stop)
-  - Remote Playback Monitor: Display Artist/Track/Album Info  
+Current version maps Mopidy 1.1.2. Next versions may break the functionality.
+Some methods marked as deprecated by Mopidy API has not been included.
 
 Pending features:
   - implement PlaylistController methods
@@ -16,7 +15,6 @@ Pending features:
   - some refactor
   - check of mopidy JSON/RPC version and methods
 
-Current version maps Mopidy 1.1.2. Next versions may break the functionality
 
 Installation
 ============
@@ -41,7 +39,7 @@ A demo application (::file::demo.py) is provided. It makes use of ::package::mop
 Project resources
 =================
 
-- `Source code <https://github.com/ismailof/mopidy-json-client`_
+- `Source code <https://github.com/ismailof/mopidy-json-client>`_
 - `Issue tracker <https://github.com/ismailof/mopidy-json-client/issues>`_
 
 
