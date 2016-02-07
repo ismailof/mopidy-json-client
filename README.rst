@@ -4,7 +4,7 @@ Mopidy-JSON-Client
 
 Mopidy Client via JSON/RPC Websocket interface
 
-This module generates a python interface which maps the `Mopidy Core API <mopidy.readthedocs.org/en/latest/api/core>`_ methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core <mopidy.readthedocs.org/en/latest/api/core>`_ .
+This module generates a python interface which maps the `Mopidy Core API <https://mopidy.readthedocs.org/en/latest/api/core>`_ methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core <https://mopidy.readthedocs.org/en/latest/api/core>`_ .
 
 Current version maps Mopidy 1.1.2. Next versions may break the functionality.
 Some methods marked as deprecated by Mopidy API has not been included.
