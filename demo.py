@@ -2,13 +2,11 @@ import time
 from mopidy_json_client import MopidyWSClient, MopidyWSListener
 from mopidy_json_client.common import print_nice
 
-
 class MopydyWSCLI(MopidyWSListener):
 
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
         self.mopidy = MopidyWSClient(event_handler = self.on_event)    
-        time.sleep(5)
         self.state = self.mopidy.playback.get_state()
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)           
         self.uri = tl_track['track'].get('uri') if tl_track else None          
@@ -58,12 +56,15 @@ class MopydyWSCLI(MopidyWSListener):
             print_nice ('Mopidy Core Version: ', version)
        
         elif (command == 'send'):
-            kwargs={}
-            for arg in args[1:]:
-                words=arg.split('=')
-                kwargs.update(words[0],words[1])	      
-            result = self.mopidy.test.send_method(args[0], **kwargs)
-            print_nice ('Result: ', result)              
+            if args:
+                kwargs={}
+                for arg in args[1:]:
+                    words=arg.split('=')
+                    kwargs.update(words[0],words[1])	      
+                result = self.mopidy.test.send_method('core.' + args[0], **kwargs)
+                print_nice ('Result: ', result) 
+            else:
+                print ('\nUse %s <method> <arg1=vaue1> <arg2=value2> ...' % command)
        
         #Get current track and update self.uri
         elif (command == 'track'):
@@ -205,5 +206,5 @@ if __name__ == '__main__':
         command, args = demo.prompt()
         if command != '':
             demo.execute_command(command, args)                
-        time.sleep (0.1)
+        time.sleep (0.3)
   

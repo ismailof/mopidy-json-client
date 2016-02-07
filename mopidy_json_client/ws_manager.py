@@ -2,7 +2,7 @@ import websocket
 import json
 import thread
 
-from common import * 
+from .common import * 
 
 class MopidyWSManager (object):
             
@@ -22,6 +22,12 @@ class MopidyWSManager (object):
                                             )          
         if self.wsa:
             thread.start_new_thread(self.wsa.run_forever, ())
+
+        #Waits for connection to start
+        #TODO: Intelligent wait for connection
+        #TODO: Retry connection
+        time.sleep(5)
+
     
     def send_message (self, id_msg, method, **params):  
         '''
@@ -60,7 +66,7 @@ class MopidyWSManager (object):
                 compact_error_data = {}
                 compact_error_data['title'] = error_data.get('message')
                 inner_data = error_data.get('data')
-                if type(inner_data) == 'str':
+                if type(inner_data) in {str,unicode}:
                     compact_error_data['error'] = inner_data
                 elif 'message' in error_data:
                     compact_error_data['error'] = inner_data.get('message')

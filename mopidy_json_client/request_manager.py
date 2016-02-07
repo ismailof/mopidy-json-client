@@ -1,6 +1,6 @@
 import time
 from functools import partial
-from common import * 
+from .common import * 
  
 
 class RequestQueue (object):
