@@ -90,7 +90,11 @@ class MopydyWSCLI(MopidyWSListener):
         
         #Playback commands
         elif (command == 'play'):
-            self.mopidy.playback.play()
+            if args:
+                if unicode(args[0]).isnumeric():
+                    self.mopidy.playback.play(tlid=int(args[0]))
+            else:
+                self.mopidy.playback.play()
         elif (command == 'pause'):
             self.mopidy.playback.pause()
         elif (command == 'stop'):
@@ -103,16 +107,20 @@ class MopydyWSCLI(MopidyWSListener):
             self.mopidy.playback.previous()      
         
         #Mixer commands        
-        elif (command == 'volume'):
-            vol = self.mopidy.mixer.get_volume(timeout=15)     
-            print_nice('[REQUEST] Current volume is ', vol)
+        elif (command in {'vol','volume'}):
+            if args:
+                if unicode(args[0]).isnumeric():
+                    self.mopidy.playback.set_volume(volume=int(args[0]))
+            else:
+                vol = self.mopidy.mixer.get_volume(timeout=15)     
+                print_nice('[REQUEST] Current volume is ', vol)
         elif (command == '+'):
             vol = self.mopidy.mixer.get_volume(timeout=15)     
-            if vol:
+            if vol is not None:
                 self.mopidy.mixer.set_volume(vol+10)     
         elif (command == '-'):
             vol = self.mopidy.mixer.get_volume(timeout=15)
-            if vol:
+            if vol is not None:
                 self.mopidy.mixer.set_volume(vol-10)
         elif (command == 'mute'):
             current_mute = self.mopidy.mixer.get_mute(timeout=15)     

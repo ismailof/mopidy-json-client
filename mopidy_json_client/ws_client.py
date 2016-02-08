@@ -1,7 +1,7 @@
 import logging
 
 from .mopidy_api import CoreController
-import controllers_1_1_2 as controllers
+import methods_1_1_2 as methods
 from .ws_manager import MopidyWSManager
 from .request_manager import RequestQueue
 from .common import * 
@@ -50,11 +50,11 @@ class MopidyWSClient (MopidyWSSimpleClient):
     def __init__ (self, **kwargs):                
         super (MopidyWSClient, self).__init__(**kwargs)
         
-        #Load mopidy controllers, dependant on mopidy_api_<version>
-        self.playback = controllers.PlaybackController(self.request_queue.make_request)        
-        self.mixer = controllers.MixerController(self.request_queue.make_request)
-        self.tracklist = controllers.TracklistController(self.request_queue.make_request)
-        self.playlists = controllers.PlaylistsController(self.request_queue.make_request)
-        self.library = controllers.LibraryController(self.request_queue.make_request)
-        self.history = controllers.HistoryController(self.request_queue.make_request)
+        #Load mopidy JSON/RPC methods
+        self.playback = methods.PlaybackController(self.request_queue.make_request)        
+        self.mixer = methods.MixerController(self.request_queue.make_request)
+        self.tracklist = methods.TracklistController(self.request_queue.make_request)
+        self.playlists = methods.PlaylistsController(self.request_queue.make_request)
+        self.library = methods.LibraryController(self.request_queue.make_request)
+        self.history = methods.HistoryController(self.request_queue.make_request)
                               
