@@ -1,5 +1,5 @@
 from mopidy.core import CoreListener
-       
+
 class MopidyWSListener (CoreListener):
     ''' Subclass of ::class::mopidt.core.CoreListener class in mopidy.        
                 
@@ -24,7 +24,7 @@ class MopidyWSController (object):
         return self._request_handler_(method, **kwargs)                
         
         
-class TestController (MopidyWSController):
+class CoreController (MopidyWSController):
     def get_api (self, **options):
         return self.mopidy_request('core.describe', **options)                      
     
@@ -32,4 +32,4 @@ class TestController (MopidyWSController):
         return self.mopidy_request('core.get_version', **options)                      
     
     def send_method (self, method, **params):
-        return self.mopidy_request(method, **params)                      
+        return self.mopidy_request('core.' + method, **params)                      

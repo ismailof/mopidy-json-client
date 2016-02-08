@@ -1,4 +1,4 @@
-from .api import MopidyWSController
+from . import MopidyWSController
 
 
 class TracklistController (MopidyWSController):

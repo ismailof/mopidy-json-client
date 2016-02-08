@@ -1,12 +1,13 @@
-import time 
+import time
 from mopidy_json_client import MopidyWSClient, MopidyWSListener
 from mopidy_json_client.common import print_nice
+
 
 class MopydyWSCLI(MopidyWSListener):
 
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
-        self.mopidy = MopidyWSClient(event_handler = self.on_event)    
+        self.mopidy = MopidyWSClient(event_handler=self.on_event)    
         self.state = self.mopidy.playback.get_state()
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)           
         self.uri = tl_track['track'].get('uri') if tl_track else None          
@@ -46,13 +47,13 @@ class MopydyWSCLI(MopidyWSListener):
             self.mopidy.close()
             exit()
             
-        #Debugging and test methods
+        #Core methods
         elif (command == 'api'):
-            core_api = self.mopidy.test.get_api(timeout=40)
+            core_api = self.mopidy.core.get_api(timeout=40)
             print_nice ('*** MOPIDY CORE API ***', core_api)
        
         elif (command == 'version'):
-            version = self.mopidy.test.get_version(timeout=5)
+            version = self.mopidy.core.get_version(timeout=5)
             print_nice ('Mopidy Core Version: ', version)
        
         elif (command == 'send'):
@@ -61,7 +62,7 @@ class MopydyWSCLI(MopidyWSListener):
                 for arg in args[1:]:
                     words=arg.split('=')
                     kwargs.update(words[0],words[1])	      
-                result = self.mopidy.test.send_method('core.' + args[0], **kwargs)
+                result = self.mopidy.core.send_method('core.' + args[0], **kwargs)
                 print_nice ('Result: ', result) 
             else:
                 print ('\nUse %s <method> <arg1=vaue1> <arg2=value2> ...' % command)

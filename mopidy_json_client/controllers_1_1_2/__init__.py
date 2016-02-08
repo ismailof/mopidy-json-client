@@ -1,5 +1,4 @@
-
-from .api import MopidyWSListener, MopidyWSController, TestController
+from ..mopidy_api import MopidyWSController
 from .playback import PlaybackController
 from .tracklist import TracklistController
 from .mixer import MixerController

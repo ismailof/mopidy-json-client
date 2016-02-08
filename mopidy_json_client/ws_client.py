@@ -1,13 +1,15 @@
 import logging
 
-import mopidy_api 
+from .mopidy_api import CoreController
+import controllers_1_1_2 as controllers
 from .ws_manager import MopidyWSManager
 from .request_manager import RequestQueue
 from .common import * 
                
 logging.basicConfig()                    
                
-class MopidyWSClient (object):
+               
+class MopidyWSSimpleClient (object):
     
     def __init__ (self, 
                         ws_endpoint = 'ws://localhost:6680/mopidy/ws',
@@ -24,14 +26,8 @@ class MopidyWSClient (object):
                                             
         self.request_queue = RequestQueue (send_function = self.ws_manager.send_message)
 
-        self.playback = mopidy_api.PlaybackController(self.request_queue.make_request)        
-        self.mixer = mopidy_api.MixerController(self.request_queue.make_request)
-        self.tracklist = mopidy_api.TracklistController(self.request_queue.make_request)
-        self.playlists = mopidy_api.PlaylistsController(self.request_queue.make_request)
-        self.library = mopidy_api.LibraryController(self.request_queue.make_request)
-        self.history = mopidy_api.HistoryController(self.request_queue.make_request)
-        
-        self.test = mopidy_api.TestController(self.request_queue.make_request)
+        #Core controller
+        self.core = CoreController(self.request_queue.make_request)
         
     def _handle_result (self, id_msg, result):                
         self.request_queue.result_handler(id_msg, result)                
@@ -46,5 +42,19 @@ class MopidyWSClient (object):
             self.event_handler (event, **event_data)   
         
     def close (self):
-        self.ws_manager.close()    
+        self.ws_manager.close()   
         
+               
+class MopidyWSClient (MopidyWSSimpleClient):  
+    
+    def __init__ (self, **kwargs):                
+        super (MopidyWSClient, self).__init__(**kwargs)
+        
+        #Load mopidy controllers, dependant on mopidy_api_<version>
+        self.playback = controllers.PlaybackController(self.request_queue.make_request)        
+        self.mixer = controllers.MixerController(self.request_queue.make_request)
+        self.tracklist = controllers.TracklistController(self.request_queue.make_request)
+        self.playlists = controllers.PlaylistsController(self.request_queue.make_request)
+        self.library = controllers.LibraryController(self.request_queue.make_request)
+        self.history = controllers.HistoryController(self.request_queue.make_request)
+                              
