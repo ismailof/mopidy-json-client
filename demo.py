@@ -7,55 +7,60 @@ class MopydyWSCLI(MopidyWSListener):
 
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
-        self.mopidy = MopidyWSClient(event_handler=self.on_event)    
+        
+        #Instantiate Mopidy Client
+        self.mopidy = MopidyWSClient(event_handler=self.on_event, 
+                                     error_handler=self.on_server_error)
+        
+        # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state()
-        tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)           
-        self.uri = tl_track['track'].get('uri') if tl_track else None          
-    
-    def gen_uris(self,input_uris=None):
-        presets = { 'bt':'bt:stream' ,
-                    'spotify':'spotifyweb:yourmusic:songs' ,                    
-                    'epic':'tunein:station:s213847' ,
-                    'flaix':'tunein:station:s24989' ,
-                    'tunein':'tunein:root' ,
-                    'uri':self.uri ,
-                    'none':None,
-                    }
+        tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
+        self.uri = tl_track['track'].get('uri') if tl_track else None
+
+    def gen_uris(self, input_uris=None):
+        presets = {'bt': 'bt:stream',
+                   'spotify': 'spotifyweb:yourmusic:songs',
+                   'epic': 'tunein:station:s213847',
+                   'flaix': 'tunein:station:s24989',
+                   'tunein': 'tunein:root',
+                   'uri': self.uri,
+                   'none': None,
+                   }
         if not input_uris:
             return [self.uri]
-        
-        return [presets.get(key.lower()) if key.lower() in presets else key for key in input_uris]
-                 
-    
-    def prompt (self):
-        symbol={'playing':'|>',
-                'paused':'||',
-                'stopped':'[]',
-                None: '--'}
+
+        return [presets.get(key) if key in presets else key for key in input_uris]
+
+    def prompt(self):
+        symbol = {'playing': '|>',
+                  'paused': '||',
+                  'stopped': '[]',
+                  None: '--',
+                  }
         uri = self.uri
-        user_input = raw_input('%s {%s}(%s)>> ' % ('MoPiDy', symbol[self.state], uri))     
+        user_input = raw_input('%s {%s}(%s)>> ' % ('MoPiDy', symbol[self.state], uri))
         command_line = user_input.strip(' \t\n\r').split(' ')
-        
+
         command = command_line[0].lower()
         args = command_line[1:]
-        
+
         return command, args
         
     def execute_command(self, command, args=[]):
-        #Exit demo program
+        # Exit demo program
         if (command == 'exit'):
             self.mopidy.close()
             exit()
-            
-        #Core methods
+
+        # Core methods
         elif (command == 'api'):
             core_api = self.mopidy.core.get_api(timeout=40)
             print_nice ('*** MOPIDY CORE API ***', core_api)
-       
+
         elif (command == 'version'):
             version = self.mopidy.core.get_version(timeout=5)
             print_nice ('Mopidy Core Version: ', version)
-       
+
         elif (command == 'send'):
             if args:
                 kwargs={}
@@ -176,7 +181,7 @@ class MopydyWSCLI(MopidyWSListener):
         elif command != '':
                 print ("  Unknown command '%s'" % command)
         
-    ##Request callbacks
+    # Request callbacks
     def show_search_results(self, search_results):
         print_nice ('[REQUEST] Search Results: ', search_results)           
                 
@@ -184,9 +189,13 @@ class MopydyWSCLI(MopidyWSListener):
         print_nice('[REQUEST] Current Tracklist: ', tracklist, format='tracklist')                                 
 
     def show_history(self, history):
-        print_nice('[REQUEST] History: ', history, format='history')                                 
-                                                                  
-    ##Mopidy Corelistener Events        
+        print_nice('[REQUEST] History: ', history, format='history')  
+        
+    # Server Error Handler
+    def on_server_error(self, error):
+        print_nice ('[SERVER_ERROR] ', error, format='error')
+                                   
+    # Mopidy Corelistener Events        
     def stream_title_changed(self, title):
         print_nice('[EVENT] Stream Title: ', title)
     

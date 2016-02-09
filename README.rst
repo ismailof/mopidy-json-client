@@ -12,7 +12,7 @@ If API methods change the API controllers should be generated using 'generate_ap
 
 
 Pending features:
-  - exception and error handling
+  - exception handling
   - some refactoring needed
   - check for mopidy JSON/RPC version and methods
 
@@ -45,6 +45,10 @@ Project resources
 
 Changelog
 =========
+
+v0.3.2 (UNRELEASED)
+----------------------------------------
+- Added server errors handling via callback
 
 v0.3.0 (UNRELEASED)
 ----------------------------------------

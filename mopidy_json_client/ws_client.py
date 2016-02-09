@@ -11,12 +11,14 @@ logging.basicConfig()
                
 class MopidyWSSimpleClient (object):
     
-    def __init__ (self, 
-                        ws_endpoint = 'ws://localhost:6680/mopidy/ws',
-                        event_handler = None
-                        ):
+    def __init__(self,
+                 ws_endpoint = 'ws://localhost:6680/mopidy/ws',
+                 event_handler = None,
+                 error_handler = None,
+                 ):
             
-        self.event_handler = event_handler                 
+        self.event_handler = event_handler
+        self.error_handler = error_handler                 
         
         self.ws_manager = MopidyWSManager ( ws_url=ws_endpoint,
                                             on_msg_event = self._handle_event,
@@ -34,8 +36,9 @@ class MopidyWSSimpleClient (object):
                        
     def _handle_error (self, id_msg, error): 
         #TODO: Deal Error Messages from Server (raise errors or something)
-        print_nice ('[MSG_ERROR] ', error, format='error')
         self.request_queue.result_handler(id_msg, None)                               
+        if self.error_handler:
+            self.error_handler (error)   
             
     def _handle_event (self, event, event_data):        
         if self.event_handler:
