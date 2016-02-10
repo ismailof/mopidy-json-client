@@ -1,4 +1,4 @@
-from . import MopidyWSController
+from ..mopidy_api import MopidyWSController
 
 
 class MixerController (MopidyWSController):

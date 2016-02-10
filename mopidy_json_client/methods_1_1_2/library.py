@@ -1,9 +1,9 @@
-from . import MopidyWSController
+from ..mopidy_api import MopidyWSController
 
 
 class LibraryController (MopidyWSController):
 
-    #DEPRECATED
+    # DEPRECATED
     def lookup(self, uri=None, uris=None, **options):
         '''Lookup the given URIs.
         If the URI expands to multiple tracks, the returned list will contain
@@ -56,7 +56,7 @@ class LibraryController (MopidyWSController):
         '''
         return self.mopidy_request('core.library.get_distinct', field=field, query=query, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def search(self, query=None, uris=None, exact=False, **options):
         '''Search the library for tracks where ``field`` contains ``values``.
         If ``uris`` is given, the search is limited to results from within the
@@ -94,7 +94,7 @@ class LibraryController (MopidyWSController):
         '''
         return self.mopidy_request('core.library.search', query=query, uris=uris, exact=exact, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def find_exact(self, query=None, uris=None, **options):
         '''Search the library for tracks where ``field`` is ``values``.
         .. deprecated:: 1.0

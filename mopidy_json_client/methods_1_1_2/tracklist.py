@@ -1,4 +1,4 @@
-from . import MopidyWSController
+from ..mopidy_api import MopidyWSController
 
 
 class TracklistController (MopidyWSController):
@@ -83,7 +83,7 @@ class TracklistController (MopidyWSController):
         '''
         return self.mopidy_request('core.tracklist.previous_track', tl_track=tl_track, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def add(self, tracks=None, at_position=None, uri=None, uris=None, **options):
         '''Add tracks to the tracklist.
         If ``uri`` is given instead of ``tracks``, the URI is looked up in the
@@ -153,7 +153,7 @@ class TracklistController (MopidyWSController):
         '''
         return self.mopidy_request('core.tracklist.slice', start=start, end=end, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def filter(self, criteria=None, **options):
         '''Filter the tracklist by the given criterias.
         A criteria consists of a model field to check and a list of values to

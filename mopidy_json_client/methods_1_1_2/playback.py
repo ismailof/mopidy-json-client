@@ -1,4 +1,4 @@
-from . import MopidyWSController
+from ..mopidy_api import MopidyWSController
 
 
 class PlaybackController (MopidyWSController):
@@ -74,7 +74,7 @@ class PlaybackController (MopidyWSController):
         '''
         return self.mopidy_request('core.playback.get_current_tlid', **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def get_mute(self, **options):
         '''.. deprecated:: 1.0
             Use :meth:`core.mixer.get_mute()
@@ -82,7 +82,7 @@ class PlaybackController (MopidyWSController):
         '''
         return self.mopidy_request('core.playback.get_mute', **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def get_volume(self, **options):
         '''.. deprecated:: 1.0
             Use :meth:`core.mixer.get_volume()
@@ -118,7 +118,7 @@ class PlaybackController (MopidyWSController):
         '''
         return self.mopidy_request('core.playback.previous', **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def set_volume(self, volume, **options):
         '''.. deprecated:: 1.0
             Use :meth:`core.mixer.set_volume()
@@ -126,7 +126,7 @@ class PlaybackController (MopidyWSController):
         '''
         return self.mopidy_request('core.playback.set_volume', volume=volume, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def set_mute(self, mute, **options):
         '''.. deprecated:: 1.0
             Use :meth:`core.mixer.set_mute()

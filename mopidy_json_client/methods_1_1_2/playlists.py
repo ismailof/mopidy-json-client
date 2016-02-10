@@ -1,4 +1,4 @@
-from . import MopidyWSController
+from ..mopidy_api import MopidyWSController
 
 
 class PlaylistsController (MopidyWSController):
@@ -49,7 +49,7 @@ class PlaylistsController (MopidyWSController):
         '''
         return self.mopidy_request('core.playlists.refresh', uri_scheme=uri_scheme, **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def get_playlists(self, include_tracks=True, **options):
         '''Get the available playlists.
         :rtype: list of :class:`mopidy.models.Playlist`
@@ -101,7 +101,7 @@ class PlaylistsController (MopidyWSController):
         '''
         return self.mopidy_request('core.playlists.as_list', **options)
 
-    #DEPRECATED
+    # DEPRECATED
     def filter(self, criteria=None, **options):
         '''Filter playlists by the given criterias.
         Examples::

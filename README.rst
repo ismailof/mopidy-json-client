@@ -5,9 +5,9 @@ Mopidy-JSON-Client
 Mopidy Client via JSON/RPC Websocket interface
 
 This module generates a python interface which maps the `Mopidy Core API <https://mopidy.readthedocs.org/en/latest/api/core>`_ methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core <https://mopidy.readthedocs.org/en/latest/api/core>`_ .
-It makes use of `websocket_client <https://github.com/liris/websocket_client>`_  
+It makes use of `websocket_client <https://github.com/liris/websocket_client>`_
 
-Current version maps Mopidy 1.1.2 JSON/RPC API. 
+Current version maps Mopidy 1.1.2 JSON/RPC API.
 If API methods change the API controllers should be generated using 'generate_api.py'
 
 
@@ -24,17 +24,17 @@ Install by running:
 
     git clone git@github.com:ismailof/mopidy-json-client
     sudo python setup.py install
-    
+
 
 Usage
 =====
 
-mopidy-json-client provides two classes:     
-   - '::class::MopidyWSClient'  : manages the connection and methods to the Mopidy Server        
+mopidy-json-client provides two classes:
+   - '::class::MopidyWSClient'  : manages the connection and methods to the Mopidy Server
    - '::class:MopidyWSListener' : event handler
 
 A demo application (demo.py) is provided. It makes use of ::package::mopidy-json-client to implement a simple Mopidy CLI (Command Line Interface) client.
-    
+
 
 Project resources
 =================

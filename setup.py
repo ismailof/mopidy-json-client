@@ -27,7 +27,7 @@ setup(
         'setuptools',
         'Mopidy >= 1.1.2',
     ],
-    entry_points={        
+    entry_points={
     },
     classifiers=[
         'Environment :: No Input/Output (Daemon)',
