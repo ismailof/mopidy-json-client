@@ -12,39 +12,38 @@ class RequestQueue (object):
     def make_request(self,
                      method,
                      on_result=None,
-                     timeout=30,
+                     timeout=None,
                      **params):
-
+        
+      
+        # If no option is passed (callback nor timeout) send a notification (no waiting for response)
+        if not on_result and not timeout:        
+            self._send_message(None, method, params)
+            return None
+        
         # Increase Message ID
-        self.id_msg += 1
-
-        # Generate request
-        id_msg = self.id_msg
+        self.id_msg += 1            
+        
+        # Generate request        
         request_data = {'method': method,
                         'params': params,
-                        'callback': on_result,
+                        'callback': on_result if on_result else partial(self._unlock, id_msg=self.id_msg),
                         'timeout': timeout,
-                        'locked': False,
+                        'locked': False if on_result else True,
                         'start_time': time.time(),
                         'result': None
-                        }
-        # If no callback passed, prepare blocking method
-        if on_result is None:
-            request_data['locked'] = True
-            request_data['callback'] = partial(self._unlock, id_msg=id_msg)
-
-        # Add data to queue
-        self.requests[id_msg] = request_data
+                        }                
+        # Add request to queue
+        self.requests[self.id_msg] = request_data        
+    
         # Send message to websocket
-        self._send_message(id_msg, request_data)
+        self._send_message(self.id_msg, method, params)
 
-        # If no callback passed, block thread until getting a result
-        if on_result is None:
+        # Block thread until getting a result
+        if request_data['locked']:
             return self._wait_for_result(self.id_msg)
 
-    def _send_message(self, id_msg, request_data):
-        method = request_data['method']
-        params = request_data['params']
+    def _send_message(self, id_msg, method, params):
         self._send_function_(id_msg, method, **params)
 
     def result_handler(self, id_result, result):

@@ -2,24 +2,24 @@ from functools import wraps
 import time
 
 
-def format_data(value, indent=0, htchar='\t', lfchar='\n'):
+def format_expand(value, indent=0, htchar='\t', lfchar='\n'):
     try:
         nlch = lfchar + htchar * (indent)
         if type(value) is dict:
             items = [
-                nlch + str(key) + ': ' + format_data(value[key], indent=indent + 1)
+                nlch + str(key) + ': ' + format_expand(value[key], indent=indent + 1)
                 for key in value
             ]
             return '%10s' % (''.join(items))
         elif type(value) is list:
             items = [
-                format_data(item, indent=indent)
+                format_expand(item, indent=indent)
                 for item in value
             ]
             return '%s' % ((nlch + '+').join(items))
         elif type(value) is tuple:
             items = [
-                nlch + format_data(item, htchar, lfchar, indent=indent + 1)
+                nlch + format_expand(item, htchar, lfchar, indent=indent + 1)
                 for item in value
             ]
             return '(%s)' % (','.join(items))
@@ -32,7 +32,7 @@ def format_data(value, indent=0, htchar='\t', lfchar='\n'):
         return str(value).replace(lfchar, nlch)
 
 
-def print_nice(label, data, format=None):
+def format_nice(data, format=None):
 
     try:
         if data is None:
@@ -40,18 +40,24 @@ def print_nice(label, data, format=None):
 
         elif format == 'raw':
             print('%r %r' % (type(data), data))
-
+            
+        elif format == 'expand':
+            nice_str_data = format_expand(data, indent=1)
+       
         elif format == 'track':
-            nice_str_data = '%r - %r' % (data['artists'][0]['name'], data['name'])
+            title = data['name']
+            artist = data['artists'][0]['name'] if 'artists' in data else '<unknown>'
+            uri = data['uri']
+            nice_str_data = '%r - %r (%s)' % (artist, title, uri)            
 
         elif format == 'tracklist':
             nice_str_data = ''
-            for tl_track in data:
-                tlid = tl_track['tlid']
-                name = tl_track['track']['name']
-                artist = tl_track['track']['artists'][0]['name']
-                uri = tl_track['track']['uri']
-                nice_str_data = ['\n\t[%3d] %r - %r (%s)' % (tlid, artist, name, uri)]
+            for tl_track in data:      
+                str_data = {'tlid': tl_track['tlid'],
+                            'title': tl_track['track']['name'],
+                            'artist': tl_track['track']['artists'][0]['name'] if 'artists' in tl_track['track'] else '<unknown>',
+                            'uri': tl_track['track']['uri'] }
+                nice_str_data += '\n\t[%(tlid)3d] %(artist)r - %(title)r (%(uri)s)' % (str_data)
 
         elif format == 'time_position':
             secs = data / 1000
@@ -75,25 +81,30 @@ def print_nice(label, data, format=None):
         elif format == 'history':
             str_history = ['\n\t[%s] %r (%s)' % (time.strftime('%d-%b %H:%M:%S', time.localtime(item[0] / 1000)), item[1]['name'], item[1]['uri']) for item in data]
             nice_str_data = ''.join(str_history)
-
+            
         else:
-            nice_str_data = format_data(data, indent=1)
+            nice_str_data = format_expand(data, indent=1)
 
-        # Print label and formatted data
-        print('%s%s' % (label, nice_str_data))
-
+        return nice_str_data
+       
     except Exception as ex:
-        print('%s\n%r %r' % (label, type(data), data))
-        print(ex)
+        return format_nice (data, format='raw')
+    
+       
+
+def print_nice(label, data, format=None):
+    # Print label and formatted data
+    print('%s%s' % (label, format_nice(data, format=format)))
 
 
+# TODO: Change prints for debugs ?
 def debug_function(_function_):
     @wraps(_function_)
     def wrapper(*args, **kwargs):
-        print('DEBUG: Called %r with args %r, kwargs: %s' % (_function_.__name__, args, kwargs))
+        print('[CALL] <%r>, args %r, kwargs: %s' % (_function_.__name__, args, kwargs))
         return_value = _function_(*args, **kwargs)
         if return_value is not None:
-            print('DEBUG: Function %r returned %r %r' % (_function_.__name__, return_value, type(return_value)))
+            print('[RETURN] <%r> returned %r %r' % (_function_.__name__, return_value, type(return_value)))
             return return_value
 
     return wrapper

@@ -1,19 +1,26 @@
+#!/usr/bin/python
+
 import time
+import logging
 from mopidy_json_client import MopidyWSClient, MopidyWSListener
 from mopidy_json_client.common import print_nice
 
 
-class MopydyWSCLI(MopidyWSListener):
+class MopidyWSCLI(MopidyWSListener):
 
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
+
+        #Set logger debug
+        client_log = logging.getLogger('mopidy_json_client')
+        client_log.setLevel(logging.DEBUG)
 
         # Instantiate Mopidy Client
         self.mopidy = MopidyWSClient(event_handler=self.on_event,
                                      error_handler=self.on_server_error)
 
         # Initialize mopidy track and state
-        self.state = self.mopidy.playback.get_state()
+        self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
         self.uri = tl_track['track'].get('uri') if tl_track else None
 
@@ -54,7 +61,7 @@ class MopydyWSCLI(MopidyWSListener):
 
         # Core methods
         elif (command == 'api'):
-            core_api = self.mopidy.core.get_api(timeout=40)
+            core_api = self.mopidy.core.describe(timeout=40)
             print_nice('*** MOPIDY CORE API ***', core_api)
 
         elif (command == 'version'):
@@ -67,7 +74,7 @@ class MopydyWSCLI(MopidyWSListener):
                 for arg in args[1:]:
                     words = arg.split('=')
                     kwargs.update(words[0], words[1])
-                result = self.mopidy.core.send_method('core.' + args[0], **kwargs)
+                result = self.mopidy.core.send(args[0], timeout=40, **kwargs)
                 print_nice('Result: ', result)
             else:
                 print('\nUse %s <method> <arg1=vaue1> <arg2=value2> ...' % command)
@@ -85,7 +92,7 @@ class MopydyWSCLI(MopidyWSListener):
             self.mopidy.playback.get_time_position(on_result=self.seeked)
 
         elif(command == 'state'):
-            self.state = self.mopidy.playback.get_state()
+            self.state = self.mopidy.playback.get_state(timeout=5)
             print_nice('Playback Status: ', self.state)
 
         # Playback commands
@@ -138,17 +145,18 @@ class MopydyWSCLI(MopidyWSListener):
         elif (command == 'add'):
             self.mopidy.tracklist.add(uris=self.gen_uris(args))
         elif (command == 'del'):
-            if args and unicode(args[0]).isnumeric():
-                self.mopidy.tracklist.remove(criteria={'tlid': int(args[0])})
+            if args and all([unicode(arg).isnumeric() for arg in args]):
+                self.mopidy.tracklist.remove(criteria={'tlid': [int(i) for i in args]})
         elif (command == 'clear'):
             self.mopidy.tracklist.clear()
 
         # 'Tune' the given URIs uris and play them
         elif (command == 'tune'):
-            self.mopidy.tracklist.clear()
-            self.mopidy.tracklist.add(uris=self.gen_uris(args))
-            self.mopidy.playback.play()
-            self.execute_command('track')
+            if args:
+                self.mopidy.tracklist.clear()
+                self.mopidy.tracklist.add(uris=self.gen_uris(args))
+                self.mopidy.playback.play()
+                self.execute_command('track')
 
         # History methods
         elif (command == 'history'):
@@ -157,15 +165,15 @@ class MopydyWSCLI(MopidyWSListener):
         # Library methods
         elif (command == 'browse'):
             uri = self.gen_uris(args)[0]
-            result = self.mopidy.library.browse(uri=uri)
+            result = self.mopidy.library.browse(uri=uri, timeout=30)
             print_nice('[REQUEST] Browsing %s :' % uri, result, format='browse')
 
         elif (command in ['info', 'lookup']):
-            info = self.mopidy.library.lookup(uris=self.gen_uris(args))
+            info = self.mopidy.library.lookup(uris=self.gen_uris(args), timeout=30)
             print_nice('[REQUEST] Lookup on URIs: ', info)
 
         elif (command in ['image', 'images']):
-            images = self.mopidy.library.get_images(uris=self.gen_uris(args))
+            images = self.mopidy.library.get_images(uris=self.gen_uris(args), timeout=30)
             print_nice('[REQUEST] Images for URIs :', images, format='image')
 
         elif (command == 'search'):
@@ -200,29 +208,29 @@ class MopydyWSCLI(MopidyWSListener):
 
     # Mopidy Corelistener Events
     def stream_title_changed(self, title):
-        print_nice('[EVENT] Stream Title: ', title)
+        print_nice('> Stream Title: ', title)
 
     def volume_changed(self, volume):
-        print_nice('[EVENT] Current volume is ', volume, format='volume')
+        print_nice('> Current volume is ', volume, format='volume')
 
     def playback_state_changed(self, old_state, new_state):
         self.state = new_state
-        print_nice('[EVENT] Playback state changed to ', self.state)
+        print_nice('> Playback state changed to ', self.state)
 
     def mute_changed(self, mute):
-        print_nice('[EVENT] Mute State is ', mute, format='mute')
+        print_nice('> Mute State is ', mute, format='mute')
 
     def track_playback_started(self, tl_track):
         track = tl_track.get('track')
         self.uri = track.get('uri')
-        print_nice('[EVENT] Current Track is ', track, format='track')
+        print_nice('> Current Track is ', track, format='track')
 
     def seeked(self, time_position):
-        print_nice('[EVENT] Current Position is ', time_position, format='time_position')
+        print_nice('> Current Position is ', time_position, format='time_position')
 
 
 if __name__ == '__main__':
-    demo = MopydyWSCLI()
+    demo = MopidyWSCLI()
     while True:
         command, args = demo.prompt()
         if command != '':

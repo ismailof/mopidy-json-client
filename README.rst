@@ -46,8 +46,9 @@ Project resources
 Changelog
 =========
 
-v0.3.2 (UNRELEASED)
+v0.3.4 (UNRELEASED)
 ----------------------------------------
+- Small tweaks
 - Added server errors handling via callback
 
 v0.3.0 (UNRELEASED)

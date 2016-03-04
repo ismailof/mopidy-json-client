@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     client = MopidyWSSimpleClient()
     version = client.core.get_version()
-    api = client.core.get_api()
+    api = client.core.describe()
 
     for module in mopidy_modules:
         methods = {method: info for method, info in api.iteritems() if method.startswith('core.' + module)}

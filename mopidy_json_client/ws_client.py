@@ -11,7 +11,7 @@ logging.basicConfig()
 class MopidyWSSimpleClient(object):
 
     def __init__(self,
-                 ws_endpoint='ws://localhost:6680/mopidy/ws',
+                 websocket_url='ws://localhost:6680/mopidy/ws',
                  event_handler=None,
                  error_handler=None,
                  ):
@@ -19,7 +19,7 @@ class MopidyWSSimpleClient(object):
         self.event_handler = event_handler
         self.error_handler = error_handler
 
-        self.ws_manager = MopidyWSManager(ws_url=ws_endpoint,
+        self.ws_manager = MopidyWSManager(ws_url=websocket_url,
                                           on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
                                           on_msg_error=self._handle_error)
