@@ -36,59 +36,78 @@ def format_nice(data, format=None):
 
     try:
         if data is None:
-            nice_str_data = '<None>'
+            return '<None>'
 
-        elif format == 'raw':
-            print('%r %r' % (type(data), data))
+        if format == 'raw':
+            return '%r %r' % (type(data), data)
             
-        elif format == 'expand':
-            nice_str_data = format_expand(data, indent=1)
+        if format == 'expand':
+            return format_expand(data, indent=1)
        
-        elif format == 'track':
-            title = data['name']
-            artist = data['artists'][0]['name'] if 'artists' in data else '<unknown>'
-            uri = data['uri']
-            nice_str_data = '%r - %r (%s)' % (artist, title, uri)            
+        if format == 'tracklist':            
+            tracklist = ['\n\t[%3d] %s' % (tl_track.get('tlid',0), format_nice(tl_track.get('track'))) for tl_track in data]
+            return ''.join(tracklist)
 
-        elif format == 'tracklist':
-            nice_str_data = ''
-            for tl_track in data:      
-                str_data = {'tlid': tl_track['tlid'],
-                            'title': tl_track['track']['name'],
-                            'artist': tl_track['track']['artists'][0]['name'] if 'artists' in tl_track['track'] else '<unknown>',
-                            'uri': tl_track['track']['uri'] }
-                nice_str_data += '\n\t[%(tlid)3d] %(artist)r - %(title)r (%(uri)s)' % (str_data)
-
-        elif format == 'time_position':
+        if format == 'time_position':
             secs = data / 1000
             minutes = secs // 60
             hours = secs // 3600
-            nice_str_data = ('%02dm%02ds' % (minutes, secs % 60)) if (hours < 1) else '%dh%02dm%02ds' % ((hours, minutes % 60, secs % 60))
+            return ('%02dm%02ds' % (minutes, secs % 60)) \
+                if (hours < 1) else '%dh%02dm%02ds' % ((hours, minutes % 60, secs % 60))
 
-        elif format == 'image':
+        if format == 'images':
             str_uris = []
             for uri, uri_images in data.iteritems():
-                list_images = []
-                for image in uri_images:
-                    list_images = '\n\t\t[%3dx%3d] %s' % (image.get('width', 0), image.get('height', 0), image.get('uri', ''))
+                list_images = ['\n\t\t' + format_nice(image) for image in uri_images]
                 str_uris.append('\n\t(URI %s)' % uri + ''.join(list_images))
-            nice_str_data = ''.join(str_uris)
+            return ''.join(str_uris)
+        
+        if format == 'browse':
+            return ''.join(['\n\t' + format_nice(item) for item in data])
 
-        elif format == 'browse':
-            str_browse = ['\n\t[%s] %r (%s)' % (item.get('type'), item.get('name'), item.get('uri')) for item in data]
-            nice_str_data = ''.join(str_browse)
+        if format == 'search':
+            return '\n'.join([format_nice(item) for item in data])
 
-        elif format == 'history':
-            str_history = ['\n\t[%s] %r (%s)' % (time.strftime('%d-%b %H:%M:%S', time.localtime(item[0] / 1000)), item[1]['name'], item[1]['uri']) for item in data]
-            nice_str_data = ''.join(str_history)
-            
-        else:
-            nice_str_data = format_expand(data, indent=1)
-
-        return nice_str_data
+        if format == 'history':
+            str_history = ['\n\t[%s] %s' % (time.strftime('%d-%b %H:%M:%S', 
+                                            time.localtime(item[0] / 1000)), 
+                                            format_nice(item[1])) \
+                          for item in data]
+            return ''.join(str_history)
        
-    except Exception as ex:
-        return format_nice (data, format='raw')
+        
+        if hasattr(data, '__iter__') and '__model__' in data:
+
+            if data['__model__'] == 'Track':
+                title = data['name']
+                artist = data['artists'][0]['name'] if 'artists' in data else '<unknown>'
+                uri = data['uri']
+                return '%r - %r (%s)' % (artist, title, uri)            
+        
+            if data['__model__'] == 'Album':                
+                return '%r [%s] (%s)' % (data.get('name'), data.get('date','--'), data.get('uri'))
+        
+            if data['__model__'] == 'Artist':                
+                return '%(name)r (%(uri)s)' % data        
+        
+            if data['__model__'] == 'Image':
+                return '[%3dx%3d] %s' % (data.get('width', 0), data.get('height', 0), data.get('uri', ''))
+
+            if data['__model__'] == 'Ref':
+                return '[%(type)s] %(name)r (%(uri)s)' % data
+
+            if data['__model__'] == 'SearchResult':
+                list_items = ['\n[SEARCH URI (%s)]' %  data.get('uri','<None>')]
+                for section in ['tracks', 'albums', 'artists']:
+                    if section in data:
+                        list_items += ['\n\t [%s]'  % section.upper()]
+                        list_items += ['\n\t\t' + format_nice(item) for item in data[section]]                                
+                return ''.join(list_items)
+
+        return format_expand(data, indent=1)
+       
+    except Exception as ex:        
+        return '%s\nEXCEPTION: %r' % (format_nice (data, format='raw'), ex)
     
        
 
@@ -101,10 +120,10 @@ def print_nice(label, data, format=None):
 def debug_function(_function_):
     @wraps(_function_)
     def wrapper(*args, **kwargs):
-        print('[CALL] <%r>, args %r, kwargs: %s' % (_function_.__name__, args, kwargs))
+        print('[CALL] %r, args: %r, kwargs: %s' % (_function_.__name__, args, kwargs))
         return_value = _function_(*args, **kwargs)
         if return_value is not None:
-            print('[RETURN] <%r> returned %r %r' % (_function_.__name__, return_value, type(return_value)))
+            print('[RETURN] %r returned %r %r' % (_function_.__name__, return_value, type(return_value)))
             return return_value
 
     return wrapper
