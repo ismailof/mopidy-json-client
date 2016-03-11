@@ -3,7 +3,7 @@
 import time
 import logging
 from mopidy_json_client import MopidyWSClient, MopidyWSListener
-from mopidy_json_client.common import print_nice
+from mopidy_json_client.formatting import print_nice
 
 
 class MopidyWSCLI(MopidyWSListener):
@@ -11,7 +11,7 @@ class MopidyWSCLI(MopidyWSListener):
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
-        #Set logger debug
+        # Set logger debug
         client_log = logging.getLogger('mopidy_json_client')
         client_log.setLevel(logging.DEBUG)
 
@@ -25,18 +25,31 @@ class MopidyWSCLI(MopidyWSListener):
         self.uri = tl_track['track'].get('uri') if tl_track else None
 
     def gen_uris(self, input_uris=None):
-        presets = {'bt': 'bt:stream',
-                   'spotify': 'spotifyweb:yourmusic:songs',
-                   'epic': 'tunein:station:s213847',
-                   'flaix': 'tunein:station:s24989',
-                   'tunein': 'tunein:root',
-                   'uri': self.uri,
-                   'none': None,
+        presets = {'bt': ['bt:stream'],
+                   'spotify': ['spotifyweb:yourmusic:songs'],
+                   'epic': ['tunein:station:s213847'],
+                   'flaix': ['tunein:station:s24989'],
+                   'tunein': ['tunein:root'],
+                   'uri': [self.uri],
+                   'none': [None],
+                   'test': ['spotify:track:4ZiMMIaoK9sSI1iQIvHSq8',
+                            'tunein:station:s24989',
+                            'podcast+http://feeds.feedburner.com/aokishouse#http://traffic.libsyn.com/steveaoki/037_AOKIS_HOUSE_-_STEVE_AOKI.mp3',
+                            'bt:stream',
+                            ],
                    }
+
         if not input_uris:
             return [self.uri]
 
-        return [presets.get(key) if key in presets else key for key in input_uris]
+        output_uris = []
+        for uri in input_uris:
+            if uri in presets:
+                output_uris += presets[uri]
+            else:
+                output_uris += [uri]
+
+        return output_uris
 
     def prompt(self):
         symbol = {'playing': '|>',
@@ -53,6 +66,18 @@ class MopidyWSCLI(MopidyWSListener):
 
         return command, args
 
+    def command_on_off(self, args, getter, setter):
+        if args:
+            if args[0].lower() in {'on', 'yes', 'true'}:
+                new_value = True
+            elif args[0].lower() in {'off', 'no', 'false'}:
+                new_value = False
+        else:
+            current_value = getter(timeout=15)
+            new_value = not current_value
+
+        setter(new_value)
+
     def execute_command(self, command, args=[]):
         # Exit demo program
         if (command == 'exit'):
@@ -62,7 +87,13 @@ class MopidyWSCLI(MopidyWSListener):
         # Core methods
         elif (command == 'api'):
             core_api = self.mopidy.core.describe(timeout=40)
-            print_nice('*** MOPIDY CORE API ***', core_api)
+            
+            if args:
+                filtered_api = {method: desc for method, desc in core_api.iteritems() 
+                                                if any([arg in method for arg in args])}
+                print_nice('*** MOPIDY CORE API [%s] ***' % ', '.join(args), filtered_api)
+            else:
+                print_nice('*** MOPIDY CORE API ***', core_api)
 
         elif (command == 'version'):
             version = self.mopidy.core.get_version(timeout=5)
@@ -82,7 +113,7 @@ class MopidyWSCLI(MopidyWSListener):
         # Get current track and update self.uri
         elif (command == 'track'):
             track = self.mopidy.playback.get_current_tl_track(timeout=10)
-            print_nice('Current Track: ', track.get('track') if track else None, format='track')
+            print_nice('Current Track: ', track.get('track') if track else None)
             self.uri = track['track']['uri'] if track else None
 
         elif(command == 'stream'):
@@ -113,6 +144,10 @@ class MopidyWSCLI(MopidyWSListener):
         elif (command == 'previous'):
             self.mopidy.playback.previous()
 
+        elif (command == 'seek'):
+            if unicode(args[0]).isnumeric():
+                self.mopidy.playback.seek(time_position=int(args[0]))
+
         # Mixer commands
         elif (command in {'vol', 'volume'}):
             if args:
@@ -128,16 +163,11 @@ class MopidyWSCLI(MopidyWSListener):
         elif (command == '-'):
             vol = self.mopidy.mixer.get_volume(timeout=15)
             if vol is not None:
-                self.mopidy.mixer.set_volume(vol - 10)
+                self.mopidy.mixer.set_volume(max(vol - 10, 0))
         elif (command == 'mute'):
-            current_mute = self.mopidy.mixer.get_mute(timeout=15)
-            mute = not current_mute
-            if args:
-                if args[0] in {'on', 'yes', 'true'}:
-                    mute = True
-                elif args[0] in {'off', 'no', 'false'}:
-                    mute = False
-            self.mopidy.mixer.set_mute(mute)
+            self.command_on_off(args,
+                                getter=self.mopidy.mixer.get_mute,
+                                setter=self.mopidy.mixer.set_mute)
 
         # Tracklist commands
         elif (command == 'tracklist'):
@@ -149,6 +179,23 @@ class MopidyWSCLI(MopidyWSListener):
                 self.mopidy.tracklist.remove(criteria={'tlid': [int(i) for i in args]})
         elif (command == 'clear'):
             self.mopidy.tracklist.clear()
+
+        elif (command == 'random'):
+            self.command_on_off(args,
+                                getter=self.mopidy.tracklist.get_random,
+                                setter=self.mopidy.tracklist.set_random)
+        elif (command == 'single'):
+            self.command_on_off(args,
+                                getter=self.mopidy.tracklist.get_single,
+                                setter=self.mopidy.tracklist.set_single)
+        elif (command == 'repeat'):
+            self.command_on_off(args,
+                                getter=self.mopidy.tracklist.get_repeat,
+                                setter=self.mopidy.tracklist.set_repeat)
+        elif (command == 'consume'):
+            self.command_on_off(args,
+                                getter=self.mopidy.tracklist.get_consume,
+                                setter=self.mopidy.tracklist.set_consume)
 
         # 'Tune' the given URIs uris and play them
         elif (command == 'tune'):
@@ -168,13 +215,14 @@ class MopidyWSCLI(MopidyWSListener):
             result = self.mopidy.library.browse(uri=uri, timeout=30)
             print_nice('[REQUEST] Browsing %s :' % uri, result, format='browse')
 
-        elif (command in ['info', 'lookup']):
+        elif (command in ['info', 'lookup', 'detail']):
             info = self.mopidy.library.lookup(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Lookup on URIs: ', info)
+            print_nice('[REQUEST] Lookup on URIs: ', info,
+                       format='expand' if command == 'detail' else 'lookup')
 
         elif (command in ['image', 'images']):
             images = self.mopidy.library.get_images(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Images for URIs :', images, format='image')
+            print_nice('[REQUEST] Images for URIs :', images, format='images')
 
         elif (command == 'search'):
             if args:
@@ -194,7 +242,7 @@ class MopidyWSCLI(MopidyWSListener):
 
     # Request callbacks
     def show_search_results(self, search_results):
-        print_nice('[REQUEST] Search Results: ', search_results)
+        print_nice('[REQUEST] Search Results: ', search_results, format='search')
 
     def show_tracklist(self, tracklist):
         print_nice('[REQUEST] Current Tracklist: ', tracklist, format='tracklist')
@@ -219,6 +267,17 @@ class MopidyWSCLI(MopidyWSListener):
 
     def mute_changed(self, mute):
         print_nice('> Mute State is ', mute, format='mute')
+
+    def options_changed(self):
+        # Currently not working. 
+        # TODO: Post issue in mopidy
+        pass
+        #options = self.mopidy.tracklist.get_random(timeout=10)
+        #options = {'random': self.mopidy.tracklist.get_random(timeout=10),
+                   #'single': self.mopidy.tracklist.get_single(timeout=10),
+                   #'consume': self.mopidy.tracklist.get_consume(timeout=10),
+                   #'repeat': self.mopidy.tracklist.get_repeat(timeout=10)}
+        #print_nice('TRACKLIST OPTIONS:', options, format='expand')
 
     def track_playback_started(self, tl_track):
         track = tl_track.get('track')

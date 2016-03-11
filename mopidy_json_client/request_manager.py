@@ -14,17 +14,16 @@ class RequestQueue (object):
                      on_result=None,
                      timeout=None,
                      **params):
-        
-      
+
         # If no option is passed (callback nor timeout) send a notification (no waiting for response)
-        if not on_result and not timeout:        
+        if not on_result and not timeout:
             self._send_message(None, method, params)
             return None
-        
+
         # Increase Message ID
-        self.id_msg += 1            
-        
-        # Generate request        
+        self.id_msg += 1
+
+        # Generate request
         request_data = {'method': method,
                         'params': params,
                         'callback': on_result if on_result else partial(self._unlock, id_msg=self.id_msg),
@@ -32,10 +31,10 @@ class RequestQueue (object):
                         'locked': False if on_result else True,
                         'start_time': time.time(),
                         'result': None
-                        }                
+                        }
         # Add request to queue
-        self.requests[self.id_msg] = request_data        
-    
+        self.requests[self.id_msg] = request_data
+
         # Send message to websocket
         self._send_message(self.id_msg, method, params)
 
