@@ -71,17 +71,17 @@ class MopidyWSManager(object):
                     compact_error_data['error'] = 'Error #' + error_data.get('code')
 
                 if self._on_error:
-                    self._on_error(id_msg=msg_data['id'], error=compact_error_data)
+                    thread.start_new_thread(self._on_error, (), {'id_msg': msg_data['id'], 'error': compact_error_data})
 
             else:
                 if self._on_result:
-                    self._on_result(id_msg=msg_data['id'], result=result_data)
+                    thread.start_new_thread(self._on_result, (), {'id_msg': msg_data['id'], 'result': result_data})
 
         # Mopidy CoreListener Event
         elif 'event' in msg_data:
             if self._on_event:
                 event = msg_data.pop('event')
-                self._on_event(event=event, event_data=msg_data)
+                thread.start_new_thread(self._on_event, (), {'event': event, 'event_data': msg_data})
 
         # Received not-parseable message
         else:

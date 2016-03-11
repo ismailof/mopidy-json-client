@@ -87,10 +87,11 @@ class MopidyWSCLI(MopidyWSListener):
         # Core methods
         elif (command == 'api'):
             core_api = self.mopidy.core.describe(timeout=40)
-            
+
             if args:
-                filtered_api = {method: desc for method, desc in core_api.iteritems() 
-                                                if any([arg in method for arg in args])}
+                filtered_api = {method: desc
+                                for method, desc in core_api.iteritems()
+                                if any([arg in method for arg in args])}
                 print_nice('*** MOPIDY CORE API [%s] ***' % ', '.join(args), filtered_api)
             else:
                 print_nice('*** MOPIDY CORE API ***', core_api)
@@ -196,6 +197,8 @@ class MopidyWSCLI(MopidyWSListener):
             self.command_on_off(args,
                                 getter=self.mopidy.tracklist.get_consume,
                                 setter=self.mopidy.tracklist.set_consume)
+        elif (command == 'options'):
+            self.options_changed()
 
         # 'Tune' the given URIs uris and play them
         elif (command == 'tune'):
@@ -269,15 +272,11 @@ class MopidyWSCLI(MopidyWSListener):
         print_nice('> Mute State is ', mute, format='mute')
 
     def options_changed(self):
-        # Currently not working. 
-        # TODO: Post issue in mopidy
-        pass
-        #options = self.mopidy.tracklist.get_random(timeout=10)
-        #options = {'random': self.mopidy.tracklist.get_random(timeout=10),
-                   #'single': self.mopidy.tracklist.get_single(timeout=10),
-                   #'consume': self.mopidy.tracklist.get_consume(timeout=10),
-                   #'repeat': self.mopidy.tracklist.get_repeat(timeout=10)}
-        #print_nice('TRACKLIST OPTIONS:', options, format='expand')
+        options = {'random': self.mopidy.tracklist.get_random(timeout=10),
+                   'single': self.mopidy.tracklist.get_single(timeout=10),
+                   'consume': self.mopidy.tracklist.get_consume(timeout=10),
+                   'repeat': self.mopidy.tracklist.get_repeat(timeout=10)}
+        print_nice('Tracklist Options:', options, format='expand')
 
     def track_playback_started(self, tl_track):
         track = tl_track.get('track')
