@@ -19,7 +19,7 @@ class SimpleListener(CoreListener):
     def on_event(self, event, **data):
         args_text = ['%s=%r' % (arg, type(value)) for arg, value in data.iteritems()]
         log.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
-        super(MopidyWSListener, self).on_event(event, **data)
+        super(SimpleListener, self).on_event(event, **data)
 
     # TODO: List also the parameters returned within the events
     def list_events(self):
@@ -45,7 +45,7 @@ class SimpleListener(CoreListener):
                            'send',   # send method, not an event
                            'on_event',  # event dispatcher
                            ]
-        events = dir(MopidyWSListener)
+        events = dir(CoreListener)
         for item in exclude_methods:
             if item in events:
                 events.remove(item)

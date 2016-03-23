@@ -7,6 +7,7 @@ from mopidy_json_client.formatting import print_nice
 
 import json
 
+
 class MopidyWSCLI(SimpleListener):
 
     def __init__(self):
@@ -14,16 +15,17 @@ class MopidyWSCLI(SimpleListener):
 
         # Set logger debug
         client_log = logging.getLogger('mopidy_json_client')
-        client_log.setLevel(logging.DEBUG)        
+        client_log.setLevel(logging.DEBUG)
 
         # Instantiate Mopidy Client
-        self.mopidy = MopidyClient(event_handler=self.on_event,
+        self.mopidy = MopidyClient(version='1.1.2',
+                                   event_handler=self.on_event,
                                    error_handler=self.on_server_error)
 
         # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
-        self.uri = tl_track['track'].get('uri') if tl_track else None        
+        self.uri = tl_track['track'].get('uri') if tl_track else None
         self.save_results = False
 
     def gen_uris(self, input_uris=None):
@@ -68,7 +70,6 @@ class MopidyWSCLI(SimpleListener):
 
         return command, args
 
-
     def command_on_off(self, args, getter, setter):
         if args:
             if args[0].lower() in {'on', 'yes', 'true'}:
@@ -97,7 +98,7 @@ class MopidyWSCLI(SimpleListener):
     def get_save_results(self, **kwargs):
         return self.save_results
 
-    def set_save_results(self, value, **kwargs):       
+    def set_save_results(self, value, **kwargs):
         self.save_results = value
         print ('> Saving Results to file : %s' % value)
 
@@ -144,11 +145,11 @@ class MopidyWSCLI(SimpleListener):
             self.mopidy.playback.get_stream_title(on_result=self.stream_title_changed)
 
         elif(command == 'pos'):
-           self.command_numeric(args,
-                                getter=self.mopidy.playback.get_time_position,
-                                setter=self.mopidy.playback.seek,
-                                callback=self.seeked,
-                                step=20000)
+            self.command_numeric(args,
+                                 getter=self.mopidy.playback.get_time_position,
+                                 setter=self.mopidy.playback.seek,
+                                 callback=self.seeked,
+                                 step=20000)
 
         elif(command == 'state'):
             self.state = self.mopidy.playback.get_state(timeout=5)
@@ -254,7 +255,7 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'uri'):
             if args:
                 self.uri = self.gen_uris(args)[0]
-                
+
         elif (command == 'save'):
             self.command_on_off(args,
                                 getter=self.get_save_results,
@@ -269,7 +270,6 @@ class MopidyWSCLI(SimpleListener):
         if self.save_results:
             with open('result_search.json', 'w') as json_file:
                 json.dump(search_results, json_file)
-            
 
     def show_tracklist(self, tracklist):
         print_nice('[REQUEST] Current Tracklist: ', tracklist, format='tracklist')
@@ -282,7 +282,7 @@ class MopidyWSCLI(SimpleListener):
         if self.save_results:
             with open('result_history.json', 'w') as json_file:
                 json.dump(history, json_file)
-    
+
     # Server Error Handler
     def on_server_error(self, error):
         print_nice('[SERVER_ERROR] ', error, format='error')

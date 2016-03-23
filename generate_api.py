@@ -16,7 +16,9 @@ def generate_controller_code(mopidy_module, methods, version, exclude_parms={'kw
 
     print('from . import MopidyWSController\n')
     print('class %s(MopidyWSController):' % controller_name(mopidy_module))
-    print("%s''' Auto-generated %s Class for Mopidy JSON/RPC API version %s'''\n" % (nl(1), controller_name(mopidy_module), version))
+    print("%s''' Auto-generated %s Class for Mopidy JSON/RPC API version %s'''\n" % (nl(1),
+                                                                                     controller_name(mopidy_module),
+                                                                                     version))
 
     for method, info in methods.iteritems():
         # Method name
