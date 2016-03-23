@@ -4,7 +4,7 @@ from mopidy.core import CoreListener
 log = logging.getLogger(__name__)
 
 
-class MopidyWSListener(CoreListener):
+class SimpleListener(CoreListener):
     ''' Subclass of ::class::mopidt.core.CoreListener class in mopidy.
 
         ::meth::CoreListener::on_event gracefully dispatch events to client functions,

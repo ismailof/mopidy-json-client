@@ -1,6 +1,6 @@
 #!/usr/bin/python
 import sys
-from mopidy_json_client import MopidyWSSimpleClient
+from mopidy_json_client import SimpleClient
 
 
 def controller_name(mopidy_module):
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         print 'Usage: generate_api.py [mopidy_module]'
         exit(1)
 
-    client = MopidyWSSimpleClient()
+    client = SimpleClient()
     version = client.core.get_version()
     api = client.core.describe()
 

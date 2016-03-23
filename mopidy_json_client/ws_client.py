@@ -8,7 +8,7 @@ from .request_manager import RequestQueue
 logging.basicConfig()
 
 
-class MopidyWSSimpleClient(object):
+class SimpleClient(object):
 
     def __init__(self,
                  websocket_url='ws://localhost:6680/mopidy/ws',
@@ -46,10 +46,10 @@ class MopidyWSSimpleClient(object):
         self.ws_manager.close()
 
 
-class MopidyWSClient(MopidyWSSimpleClient):
+class MopidyClient(SimpleClient):
 
     def __init__(self, **kwargs):
-        super(MopidyWSClient, self).__init__(**kwargs)
+        super(MopidyClient, self).__init__(**kwargs)
 
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self.request_queue.make_request)

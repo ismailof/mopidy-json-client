@@ -2,27 +2,29 @@
 
 import time
 import logging
-from mopidy_json_client import MopidyWSClient, MopidyWSListener
+from mopidy_json_client import MopidyClient, SimpleListener
 from mopidy_json_client.formatting import print_nice
 
+import json
 
-class MopidyWSCLI(MopidyWSListener):
+class MopidyWSCLI(SimpleListener):
 
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
         # Set logger debug
         client_log = logging.getLogger('mopidy_json_client')
-        client_log.setLevel(logging.DEBUG)
+        client_log.setLevel(logging.DEBUG)        
 
         # Instantiate Mopidy Client
-        self.mopidy = MopidyWSClient(event_handler=self.on_event,
-                                     error_handler=self.on_server_error)
+        self.mopidy = MopidyClient(event_handler=self.on_event,
+                                   error_handler=self.on_server_error)
 
         # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
-        self.uri = tl_track['track'].get('uri') if tl_track else None
+        self.uri = tl_track['track'].get('uri') if tl_track else None        
+        self.save_results = False
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
@@ -66,6 +68,7 @@ class MopidyWSCLI(MopidyWSListener):
 
         return command, args
 
+
     def command_on_off(self, args, getter, setter):
         if args:
             if args[0].lower() in {'on', 'yes', 'true'}:
@@ -77,6 +80,26 @@ class MopidyWSCLI(MopidyWSListener):
             new_value = not current_value
 
         setter(new_value)
+
+    def command_numeric(self, args, getter, setter, callback=None, step=1):
+        if args:
+            if unicode(args[0]).isnumeric():
+                setter(int(args[0]))
+            elif args[0] == '+':
+                current_value = getter(timeout=15)
+                setter(current_value + step)
+            elif args[0] == '-':
+                current_value = getter(timeout=15)
+                setter(max(current_value - step, 0))
+        else:
+            getter(on_result=callback)
+
+    def get_save_results(self, **kwargs):
+        return self.save_results
+
+    def set_save_results(self, value, **kwargs):       
+        self.save_results = value
+        print ('> Saving Results to file : %s' % value)
 
     def execute_command(self, command, args=[]):
         # Exit demo program
@@ -121,11 +144,15 @@ class MopidyWSCLI(MopidyWSListener):
             self.mopidy.playback.get_stream_title(on_result=self.stream_title_changed)
 
         elif(command == 'pos'):
-            self.mopidy.playback.get_time_position(on_result=self.seeked)
+           self.command_numeric(args,
+                                getter=self.mopidy.playback.get_time_position,
+                                setter=self.mopidy.playback.seek,
+                                callback=self.seeked,
+                                step=20000)
 
         elif(command == 'state'):
             self.state = self.mopidy.playback.get_state(timeout=5)
-            print_nice('Playback Status: ', self.state)
+            print_nice('Playback State: ', self.state)
 
         # Playback commands
         elif (command == 'play'):
@@ -145,26 +172,14 @@ class MopidyWSCLI(MopidyWSListener):
         elif (command == 'previous'):
             self.mopidy.playback.previous()
 
-        elif (command == 'seek'):
-            if unicode(args[0]).isnumeric():
-                self.mopidy.playback.seek(time_position=int(args[0]))
-
         # Mixer commands
         elif (command in {'vol', 'volume'}):
-            if args:
-                if unicode(args[0]).isnumeric():
-                    self.mopidy.playback.set_volume(volume=int(args[0]))
-            else:
-                vol = self.mopidy.mixer.get_volume(timeout=15)
-                print_nice('[REQUEST] Current volume is ', vol)
-        elif (command == '+'):
-            vol = self.mopidy.mixer.get_volume(timeout=15)
-            if vol is not None:
-                self.mopidy.mixer.set_volume(vol + 10)
-        elif (command == '-'):
-            vol = self.mopidy.mixer.get_volume(timeout=15)
-            if vol is not None:
-                self.mopidy.mixer.set_volume(max(vol - 10, 0))
+            self.command_numeric(args,
+                                 getter=self.mopidy.mixer.get_volume,
+                                 setter=self.mopidy.mixer.set_volume,
+                                 callback=self.volume_changed,
+                                 step=10)
+
         elif (command == 'mute'):
             self.command_on_off(args,
                                 getter=self.mopidy.mixer.get_mute,
@@ -239,6 +254,11 @@ class MopidyWSCLI(MopidyWSListener):
         elif (command == 'uri'):
             if args:
                 self.uri = self.gen_uris(args)[0]
+                
+        elif (command == 'save'):
+            self.command_on_off(args,
+                                getter=self.get_save_results,
+                                setter=self.set_save_results)
 
         elif command != '':
                 print ("  Unknown command '%s'" % command)
@@ -246,13 +266,23 @@ class MopidyWSCLI(MopidyWSListener):
     # Request callbacks
     def show_search_results(self, search_results):
         print_nice('[REQUEST] Search Results: ', search_results, format='search')
+        if self.save_results:
+            with open('result_search.json', 'w') as json_file:
+                json.dump(search_results, json_file)
+            
 
     def show_tracklist(self, tracklist):
         print_nice('[REQUEST] Current Tracklist: ', tracklist, format='tracklist')
+        if self.save_results:
+            with open('result_tracklist.json', 'w') as json_file:
+                json.dump(tracklist, json_file)
 
     def show_history(self, history):
         print_nice('[REQUEST] History: ', history, format='history')
-
+        if self.save_results:
+            with open('result_history.json', 'w') as json_file:
+                json.dump(history, json_file)
+    
     # Server Error Handler
     def on_server_error(self, error):
         print_nice('[SERVER_ERROR] ', error, format='error')

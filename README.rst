@@ -46,6 +46,10 @@ Project resources
 Changelog
 =========
 
+v0.4.x (UNRELEASED)
+----------------------------------------
+- API name changes. MopidyClient, SimpleClient, SimpleListener
+
 v0.3.4 (UNRELEASED)
 ----------------------------------------
 - Small tweaks
