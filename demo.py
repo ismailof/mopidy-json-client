@@ -18,8 +18,7 @@ class MopidyWSCLI(SimpleListener):
         client_log.setLevel(logging.DEBUG)
 
         # Instantiate Mopidy Client
-        self.mopidy = MopidyClient(version='1.1.2',
-                                   event_handler=self.on_event,
+        self.mopidy = MopidyClient(event_handler=self.on_event,
                                    error_handler=self.on_server_error)
 
         # Initialize mopidy track and state

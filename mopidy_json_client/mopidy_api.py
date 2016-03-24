@@ -1,7 +1,7 @@
 import logging
 from mopidy.core import CoreListener
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class SimpleListener(CoreListener):
@@ -55,7 +55,7 @@ class SimpleListener(CoreListener):
     def on_event(self, event, **event_data):
         # Log event
         args_text = ['%s=%r' % (arg, type(value)) for arg, value in event_data.iteritems()]
-        log.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
+        logger.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
         # Call overriden function attached to the event
         super(SimpleListener, self).on_event(event, **event_data)
         # Call registered events
@@ -85,6 +85,8 @@ class MopidyWSController(object):
         self._request_handler_ = request_handler
 
     def mopidy_request(self, method, **kwargs):
+        args_text = ['%s=%r' % (arg, type(value)) for arg, value in kwargs.iteritems()]
+        logger.debug('[REQUEST] %s (%s)' % (method, ', '.join(args_text)))
         return self._request_handler_(method, **kwargs)
 
 

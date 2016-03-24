@@ -49,15 +49,18 @@ class SimpleClient(object):
 
 class MopidyClient(SimpleClient):
 
-    def __init__(self, version='1.1.2', **kwargs):
+    def __init__(self, version=None, **kwargs):
         super(MopidyClient, self).__init__(**kwargs)
 
-        assert StrictVersion(version) >= '1.1', 'Version %s is not supported' % version
+        if version is None:
+            version = self.core.get_version(timeout=10)
 
-        if StrictVersion(version) >= '1.1':
-            import methods_1_1 as methods
-        elif StrictVersion(version) >= '2.0':
+        assert StrictVersion(version) >= '1.1', 'Mopidy version %s is not supported' % version
+
+        if StrictVersion(version) >= '2.0':
             import methods_2_0 as methods
+        elif StrictVersion(version) >= '1.1':
+            import methods_1_1 as methods
 
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self.request_queue.make_request)
