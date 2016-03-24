@@ -23,15 +23,15 @@ Installation
 Install by running:
 
     git clone git@github.com:ismailof/mopidy-json-client
-    sudo python setup.py install
+    sudo pip install mopidy-json-client
 
 
 Usage
 =====
 
-mopidy-json-client provides two classes:
-   - '::class::MopidyWSClient'  : manages the connection and methods to the Mopidy Server
-   - '::class:MopidyWSListener' : event handler
+mopidy-json-client provides two main classes:
+   - '::class::MopidyClient' : manages the connection and methods to the Mopidy Server   
+   - '::class::SimpleListener' : event handler
 
 A demo application (demo.py) is provided. It makes use of ::package::mopidy-json-client to implement a simple Mopidy CLI (Command Line Interface) client.
 
@@ -49,6 +49,7 @@ Changelog
 v0.4.x (UNRELEASED)
 ----------------------------------------
 - API name changes. MopidyClient, SimpleClient, SimpleListener
+- Bind callbacks to events using bind method
 
 v0.3.4 (UNRELEASED)
 ----------------------------------------

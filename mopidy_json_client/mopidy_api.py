@@ -13,16 +13,13 @@ class SimpleListener(CoreListener):
         Subclass MAY implement the functions described in CoreListener API
         (http://mopidy.readthedocs.org/en/latest/api/core/core-events)
         to handle he desired events
+
+        Callbacks can be binded to events using:
+        ::meth::bind('<event_name>', <callback_function>)
     '''
 
-    # Used to log the events received by the client
-    def on_event(self, event, **data):
-        args_text = ['%s=%r' % (arg, type(value)) for arg, value in data.iteritems()]
-        log.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
-        super(SimpleListener, self).on_event(event, **data)
-
     # TODO: List also the parameters returned within the events
-    def list_events(self):
+    def list_events():
         ''' Helper class to list all the events the Listener can receive '''
         exclude_methods = ['__class__',   # python object methods
                            '__delattr__',
@@ -50,6 +47,34 @@ class SimpleListener(CoreListener):
             if item in events:
                 events.remove(item)
         return events
+
+    registry = {}
+    allowed_events = list_events()
+
+    # Called when an event is produced
+    def on_event(self, event, **event_data):
+        # Log event
+        args_text = ['%s=%r' % (arg, type(value)) for arg, value in event_data.iteritems()]
+        log.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
+        # Call overriden function attached to the event
+        super(SimpleListener, self).on_event(event, **event_data)
+        # Call registered events
+        if event in self.registry:
+            for _callback_ in self.registry[event]:
+                _callback_(**event_data)
+
+    def bind(self, event, callback):
+        assert event in self.allowed_events, 'Event {} does not exist'.format(event)
+        if event not in self.registry:
+            self.registry[event] = []
+        self.registry[event].append(callback)
+
+    def unbind(self, event, callback):
+        if event not in self.registry:
+            return
+        for index, cb in enumerate(self.registry[event]):
+            if cb == callback:
+                self.registry[event].pop(index)
 
 
 class MopidyWSController(object):
