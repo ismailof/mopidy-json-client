@@ -1,10 +1,11 @@
 from .ws_client import MopidyClient, SimpleClient
-from .mopidy_api import SimpleListener
+from .listener import MopidyListener, SimpleListener
 
-__version__ = '0.4.3'
+__version__ = '0.4.5'
 
 __all__ = [
     'MopidyClient',
     'SimpleClient',
+    'MopidyListener',
     'SimpleListener'
 ]

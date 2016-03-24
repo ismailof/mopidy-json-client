@@ -30,7 +30,7 @@ Usage
 =====
 
 mopidy-json-client provides two main classes:
-   - '::class::MopidyClient' : manages the connection and methods to the Mopidy Server   
+   - '::class::MopidyClient' : manages the connection and methods to the Mopidy Server
    - '::class::SimpleListener' : event handler
 
 A demo application (demo.py) is provided. It makes use of ::package::mopidy-json-client to implement a simple Mopidy CLI (Command Line Interface) client.
