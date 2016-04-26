@@ -68,21 +68,21 @@ class MopidyListener(SimpleListener):
         # Call registered events
         if event in self.bindings:
             for _callback_ in self.bindings[event]:
-                logger.debug("Event '%s' triggered callback <%s>" % (event, _callback_.__name__))
+                #logger.debug("Event '%s' triggered callback <%s>" % (event, _callback_.__name__))
                 _callback_(**event_data)
 
     def bind(self, event, callback):
         assert event in self.allowed_events, 'Event {} does not exist'.format(event)
         if event not in self.bindings:
-            self.bindings[event] = []
-        logger.debug("Bind callback <%s> to event '%s'" % (callback.__name__, event))
+            self.bindings[event] = []        
+        #logger.debug("Bind callback <%s> to event '%s'" % (callback.__name__, event))
         self.bindings[event].append(callback)
 
     def unbind(self, event, callback):
         if event not in self.bindings:
-            logger.debug("No current bindings for event '%s'" % event)
+            #logger.debug("No current bindings for event '%s'" % event)
             return
         for index, cb in enumerate(self.bindings[event]):
             if cb == callback:
-                logger.debug("Unbind callback <%s> from event '%s'" % (callback.__name__, event))
+                #logger.debug("Unbind callback <%s> from event '%s'" % (callback.__name__, event))
                 self.bindings[event].pop(index)

@@ -148,7 +148,7 @@ class MopidyWSCLI(SimpleListener):
                                  getter=self.mopidy.playback.get_time_position,
                                  setter=self.mopidy.playback.seek,
                                  callback=self.seeked,
-                                 step=20000)
+                                 step=30000)
 
         elif(command == 'state'):
             self.state = self.mopidy.playback.get_state(timeout=5)

@@ -1,7 +1,8 @@
+import logging
 from .ws_client import MopidyClient, SimpleClient
 from .listener import MopidyListener, SimpleListener
 
-__version__ = '0.4.5'
+__version__ = '0.4.7'
 
 __all__ = [
     'MopidyClient',
@@ -9,3 +10,6 @@ __all__ = [
     'MopidyListener',
     'SimpleListener'
 ]
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())

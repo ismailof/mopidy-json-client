@@ -6,7 +6,8 @@ from .ws_manager import MopidyWSManager
 from .listener import MopidyListener
 from .request_manager import RequestQueue
 
-logging.basicConfig()
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleClient(object):
@@ -57,7 +58,7 @@ class MopidyClient(SimpleClient):
 
     listener = None
 
-    def __init__(self, version=None, event_handler=None, **kwargs):
+    def __init__(self, event_handler=None, **kwargs):
 
         # If no event_handler is selected start an internal one
         if event_handler is None:
@@ -68,16 +69,18 @@ class MopidyClient(SimpleClient):
         super(MopidyClient, self).__init__(event_handler=event_handler, **kwargs)
 
         # Select Mopidy API version methods
-        if version is None:
-            version = self.core.get_version(timeout=10)
-
-        assert StrictVersion(version) >= '1.1', 'Mopidy version %s is not supported' % version
+        version = self.core.get_version(timeout=20)
+        
+        assert version is not None, 'Could not get Mopidy API version from server'
+        assert StrictVersion(version) >= '1.1', 'Mopidy API version %s is not supported' % version
 
         if StrictVersion(version) >= '2.0':
             import methods_2_0 as methods
         elif StrictVersion(version) >= '1.1':
             import methods_1_1 as methods
-
+        
+        logger.info('Connected to Mopidy Server, API version: %s', version)
+        
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self.request_queue.make_request)
         self.mixer = methods.MixerController(self.request_queue.make_request)

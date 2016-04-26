@@ -28,8 +28,8 @@ def generate_controller_code(mopidy_module, methods, version, exclude_parms={'kw
         params_use = ''
         for param in info.get('params'):
             if param['name'] not in exclude_parms:
-                params_def += (('%s=%s' % (param['name'], param['default'])) if 'default' in param else param['name']) + ', '
-                params_use += '%s=%s' % (param['name'], param['name']) + ', '
+                params_def += ('{name}={default}'.format(param) if 'default' in param else param['name']) + ', '
+                params_use += '{name}={name}'.format(param) + ', '
 
         # Generate function parts
         _definition = "def %s(self, %s**options):" % (method_name, params_def)
