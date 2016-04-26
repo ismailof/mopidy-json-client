@@ -7,14 +7,14 @@ Mopidy Client via JSON/RPC Websocket interface
 This module generates a python interface which maps the `Mopidy Core API <https://mopidy.readthedocs.org/en/latest/api/core>`_ methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core <https://mopidy.readthedocs.org/en/latest/api/core>`_ .
 It makes use of `websocket_client <https://github.com/liris/websocket_client>`_
 
-Current version maps Mopidy 1.1.2 JSON/RPC API.
-If API methods change the API controllers should be generated using 'generate_api.py'
+Current version supports Mopidy 1.1 and Mopidy 2.0 JSON/RPC API methods and events. API version of Mopidy server will be automatically detected and used.
 
+For now, connection/disconnection details are not handled. Mopidy-JSON-Client just assumes a running version of Mopidy server accesible via the HTTP Websockets interface. Otherwise, an Exception will be raised.
 
 Pending features:
+  - connection/disconnection management
   - exception handling
   - some refactoring needed
-  - check for mopidy JSON/RPC version and methods
 
 
 Installation
@@ -30,10 +30,12 @@ Usage
 =====
 
 mopidy-json-client provides two main classes:
-   - '::class::MopidyClient' : manages the connection and methods to the Mopidy Server
-   - '::class::SimpleListener' : event handler
+   - 'MopidyClient' : manages the connection and methods to the Mopidy Server
+   - 'MopidyListener' : event handler
 
-A demo application (demo.py) is provided. It makes use of ::package::mopidy-json-client to implement a simple Mopidy CLI (Command Line Interface) client.
+To ilustrate the use of the module, two examples are provided:
+   - demo_cli.py implements a simple Mopidy CLI (Command Line Interface) client.
+   - demo_volumen_gpio.py controls the volume and mute using a HW RotaryEncoder knob through the RPi.GPIO interface
 
 
 Project resources
@@ -46,10 +48,11 @@ Project resources
 Changelog
 =========
 
-v0.4.x (UNRELEASED)
+v0.4.8 (UNRELEASED)
 ----------------------------------------
 - API name changes. MopidyClient, SimpleClient, SimpleListener
 - Bind callbacks to events using bind method
+- Examples provided
 
 v0.3.4 (UNRELEASED)
 ----------------------------------------
