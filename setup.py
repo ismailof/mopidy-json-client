@@ -25,9 +25,9 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
-        'Mopidy >= 1.1.2',
+        'Mopidy >= 1.0',
     ],
-    entry_points={
+    entry_points={	
     },
     classifiers=[
         'Environment :: No Input/Output (Daemon)',
