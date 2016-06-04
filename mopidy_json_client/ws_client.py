@@ -70,7 +70,7 @@ class MopidyClient(SimpleClient):
 
         # Select Mopidy API version methods
         version = self.core.get_version(timeout=20)
-        
+
         assert version is not None, 'Could not get Mopidy API version from server'
         assert StrictVersion(version) >= '1.1', 'Mopidy API version %s is not supported' % version
 
@@ -78,9 +78,9 @@ class MopidyClient(SimpleClient):
             import methods_2_0 as methods
         elif StrictVersion(version) >= '1.1':
             import methods_1_1 as methods
-        
+
         logger.info('Connected to Mopidy Server, API version: %s', version)
-        
+
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self.request_queue.make_request)
         self.mixer = methods.MixerController(self.request_queue.make_request)
