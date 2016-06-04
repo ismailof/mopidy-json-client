@@ -3,7 +3,9 @@ python:
   - "2.7"  
   - "3.5"  
 # command to install dependencies
-install: "pip install"
+install:
+    - pip install
+    - pip install pep8
 # command to run tests
 script:
   - pep8 --exclude=migrations mopidy_json_client
