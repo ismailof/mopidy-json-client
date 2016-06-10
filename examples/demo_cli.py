@@ -126,11 +126,17 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'send'):
             if args:
                 kwargs = {}
-                for arg in args[1:]:
-                    words = arg.split('=')
-                    kwargs.update(words[0], words[1])
-                result = self.mopidy.core.send(args[0], timeout=40, **kwargs)
-                print_nice('Result: ', result)
+                try:                
+                    for arg in args[1:]:
+                        words = arg.split('=')
+                        key = words[0]
+                        value = int(words[1]) if unicode(words[1]).isnumeric() \
+                            else words[1]
+                        kwargs.update({key: value})
+                    result = self.mopidy.core.send(args[0], timeout=40, **kwargs)
+                    print_nice('Result: ', result)
+                except Exception as ex:
+                    print_nice('Exception: ', ex, format='error')
             else:
                 print('\nUse %s <method> <arg1=vaue1> <arg2=value2> ...' % command)
 

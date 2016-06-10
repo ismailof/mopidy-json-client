@@ -1,5 +1,5 @@
 import logging
-from distutils.version import StrictVersion
+from distutils.version import LooseVersion
 
 from .mopidy_api import CoreController
 from .ws_manager import MopidyWSManager
@@ -72,11 +72,11 @@ class MopidyClient(SimpleClient):
         version = self.core.get_version(timeout=20)
 
         assert version is not None, 'Could not get Mopidy API version from server'
-        assert StrictVersion(version) >= '1.1', 'Mopidy API version %s is not supported' % version
+        assert LooseVersion(version) >= LooseVersion('1.1'), 'Mopidy API version %s is not supported' % version
 
-        if StrictVersion(version) >= '2.0':
+        if LooseVersion(version) >= LooseVersion('2.0'):
             import methods_2_0 as methods
-        elif StrictVersion(version) >= '1.1':
+        elif LooseVersion(version) >= LooseVersion('1.1'):
             import methods_1_1 as methods
 
         logger.info('Connected to Mopidy Server, API version: %s', version)
