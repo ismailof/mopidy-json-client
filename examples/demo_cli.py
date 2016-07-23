@@ -81,17 +81,34 @@ class MopidyWSCLI(SimpleListener):
 
         setter(new_value)
 
-    def command_numeric(self, args, getter, setter, callback=None, step=1):
+    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):        
+            
         if args:
-            if unicode(args[0]).isnumeric():
-                setter(int(args[0]))
-            elif args[0] == '+':
+            arg_value = args[0]
+            current_value = 0
+            
+            relative = +1 if arg_value.startswith('+') \
+                else -1 if arg_value.startswith('-') \
+                else 0
+            
+            if relative:
                 current_value = getter(timeout=15)
-                setter(current_value + step)
-            elif args[0] == '-':
-                current_value = getter(timeout=15)
-                setter(max(current_value - step, 0))
+                arg_value = arg_value[1:]
+            else:
+                relative = 1
+                                                
+            if unicode(arg_value).isnumeric():
+                step = int(arg_value)
+            elif arg_value:
+                return
+                
+            new_value = current_value + step * relative * res 
+            new_value = max(new_value, 0)
+                
+            setter(new_value)
+            
         else:
+            # No argument, get current value
             getter(on_result=callback)
 
     def get_save_results(self, **kwargs):
@@ -126,7 +143,7 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'send'):
             if args:
                 kwargs = {}
-                try:                
+                try:
                     for arg in args[1:]:
                         words = arg.split('=')
                         key = words[0]
@@ -154,7 +171,8 @@ class MopidyWSCLI(SimpleListener):
                                  getter=self.mopidy.playback.get_time_position,
                                  setter=self.mopidy.playback.seek,
                                  callback=self.seeked,
-                                 step=30000)
+                                 step=30,
+                                 res=1000)
 
         elif(command == 'state'):
             self.state = self.mopidy.playback.get_state(timeout=5)
@@ -221,6 +239,9 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'options'):
             self.options_changed()
 
+        elif (command == 'playlists'):
+            self.mopidy.playlists.as_list(on_result=self.show_playlists)
+
         # 'Tune' the given URIs uris and play them
         elif (command == 'tune'):
             if args:
@@ -277,13 +298,20 @@ class MopidyWSCLI(SimpleListener):
                 json.dump(search_results, json_file)
 
     def show_tracklist(self, tracklist):
-        print_nice('[REQUEST] Current Tracklist: ', tracklist, format='tracklist')
+        print_nice('> Current Tracklist: ', tracklist, format='tracklist')
         if self.save_results:
             with open('result_tracklist.json', 'w') as json_file:
                 json.dump(tracklist, json_file)
 
+    def show_playlists(self, playlists):
+        print_nice('> User Playlists: ', playlists, format='browse')
+        if self.save_results:
+            with open('result_playlists.json', 'w') as json_file:
+                json.dump(playlists, json_file)
+
+
     def show_history(self, history):
-        print_nice('[REQUEST] History: ', history, format='history')
+        print_nice('> History: ', history, format='history')
         if self.save_results:
             with open('result_history.json', 'w') as json_file:
                 json.dump(history, json_file)
