@@ -3,6 +3,8 @@ import json
 import thread
 import time
 
+from debug import debug_function
+
 
 class MopidyWSManager(object):
 
@@ -17,7 +19,10 @@ class MopidyWSManager(object):
         self._on_error = on_msg_error
 
         self.wsa = websocket.WebSocketApp(url=ws_url,
-                                          on_message=self._received_message)
+                                          on_message=self._received_message,
+                                          on_error=self._ws_error,                                          
+                                          on_open=self._ws_open,
+                                          on_close=self._ws_close)
         if self.wsa:
             thread.start_new_thread(self.wsa.run_forever, ())
 
@@ -25,6 +30,18 @@ class MopidyWSManager(object):
         # TODO: Intelligent wait for connection
         # TODO: Retry connection
         time.sleep(5)
+
+    @debug_function
+    def _ws_error(self, *args, **kwargs):
+        pass
+
+    @debug_function
+    def _ws_open(self, *args, **kwargs):
+        pass
+    
+    @debug_function
+    def _ws_close(self, *args, **kwargs):
+        pass
 
     def send_message(self, id_msg, method, **params):
         '''
@@ -71,17 +88,23 @@ class MopidyWSManager(object):
                     compact_error_data['error'] = 'Error #' + error_data.get('code')
 
                 if self._on_error:
-                    thread.start_new_thread(self._on_error, (), {'id_msg': msg_data['id'], 'error': compact_error_data})
+                    thread.start_new_thread(self._on_error, (),
+                                            {'id_msg': msg_data['id'],
+                                             'error': compact_error_data})
 
             else:
                 if self._on_result:
-                    thread.start_new_thread(self._on_result, (), {'id_msg': msg_data['id'], 'result': result_data})
+                    thread.start_new_thread(self._on_result, (),
+                                            {'id_msg': msg_data['id'],
+                                             'result': result_data})
 
         # Mopidy CoreListener Event
         elif 'event' in msg_data:
             if self._on_event:
                 event = msg_data.pop('event')
-                thread.start_new_thread(self._on_event, (), {'event': event, 'event_data': msg_data})
+                thread.start_new_thread(self._on_event, (), 
+                                        {'event': event,
+                                         'event_data': msg_data})
 
         # Received not-parseable message
         else:
