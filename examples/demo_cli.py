@@ -212,13 +212,19 @@ class MopidyWSCLI(SimpleListener):
         # Tracklist commands
         elif (command == 'tracklist'):
             self.mopidy.tracklist.get_tl_tracks(on_result=self.show_tracklist)
+            
         elif (command == 'add'):
             self.mopidy.tracklist.add(uris=self.gen_uris(args))
+            
         elif (command == 'del'):
             if args and all([unicode(arg).isnumeric() for arg in args]):
                 self.mopidy.tracklist.remove(criteria={'tlid': [int(i) for i in args]})
+                
         elif (command == 'clear'):
             self.mopidy.tracklist.clear()
+
+        elif (command == 'shuffle'):
+            self.mopidy.tracklist.shuffle()
 
         elif (command == 'random'):
             self.command_on_off(args,
@@ -280,7 +286,7 @@ class MopidyWSCLI(SimpleListener):
         # Set current uri
         elif (command == 'uri'):
             if args:
-                self.uri = self.gen_uris(args)[0]
+                self.uri = self.gen_uris([' '.join(args)])[0]
 
         elif (command == 'save'):
             self.command_on_off(args,
