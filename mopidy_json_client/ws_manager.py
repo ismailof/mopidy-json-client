@@ -48,19 +48,16 @@ class MopidyWSManager(object):
         return self.connected
 
 
-    @debug_function
     def _ws_error(self, *args, **kwargs):
         with self.conn_lock:
             self.connected = False
             self.conn_lock.notify()
 
-    @debug_function
     def _ws_open(self, *args, **kwargs):
         with self.conn_lock:
             self.connected = True
             self.conn_lock.notify()
 
-    @debug_function
     def _ws_close(self, *args, **kwargs):        
         with self.conn_lock:
             self.connected = False          
