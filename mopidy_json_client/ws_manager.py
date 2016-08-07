@@ -41,11 +41,11 @@ class MopidyWSManager(object):
         self.wsa_thread.setDaemon(True)
         self.wsa_thread.start()
 
+        # Wait for the WSA Thread to attemp the connection
         with self.conn_lock:
             self.conn_lock.wait(5)        
 
         return self.connected
-
 
 
     @debug_function
@@ -62,7 +62,7 @@ class MopidyWSManager(object):
 
     @debug_function
     def _ws_close(self, *args, **kwargs):        
-        with self.conn_lock as cl:
+        with self.conn_lock:
             self.connected = False          
             self.conn_lock.notify()
 
