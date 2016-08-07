@@ -82,31 +82,31 @@ class MopidyWSCLI(SimpleListener):
         setter(new_value)
 
     def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):        
-            
+
         if args:
             arg_value = args[0]
             current_value = 0
-            
+
             relative = +1 if arg_value.startswith('+') \
                 else -1 if arg_value.startswith('-') \
                 else 0
-            
+
             if relative:
                 current_value = getter(timeout=15)
                 arg_value = arg_value[1:]
             else:
                 relative = 1
-                                                
+
             if unicode(arg_value).isnumeric():
                 step = int(arg_value)
             elif arg_value:
                 return
-                
+
             new_value = current_value + step * relative * res 
             new_value = max(new_value, 0)
-                
+
             setter(new_value)
-            
+
         else:
             # No argument, get current value
             getter(on_result=callback)
@@ -212,14 +212,14 @@ class MopidyWSCLI(SimpleListener):
         # Tracklist commands
         elif (command == 'tracklist'):
             self.mopidy.tracklist.get_tl_tracks(on_result=self.show_tracklist)
-            
+
         elif (command == 'add'):
             self.mopidy.tracklist.add(uris=self.gen_uris(args))
-            
+
         elif (command == 'del'):
             if args and all([unicode(arg).isnumeric() for arg in args]):
                 self.mopidy.tracklist.remove(criteria={'tlid': [int(i) for i in args]})
-                
+
         elif (command == 'clear'):
             self.mopidy.tracklist.clear()
 

@@ -24,10 +24,11 @@ class SimpleClient(object):
 
         # Connection to Mopidy Websocket Server
         ws_url = 'ws://' + server_addr + '/mopidy/ws'
-        self.ws_manager = MopidyWSManager(ws_url=ws_url,
-                                          on_msg_event=self._handle_event,
+        self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
                                           on_msg_error=self._handle_error)
+
+        self.ws_manager.connect_ws(url=ws_url)
 
         # Request Queue
         self.request_queue = RequestQueue(send_function=self.ws_manager.send_message)
