@@ -15,19 +15,22 @@ class MopidyWSManager(object):
     def __init__(self,
                  on_msg_event=None,
                  on_msg_result=None,
-                 on_msg_error=None):
+                 on_msg_error=None,
+                 on_connection=None):
 
         self._on_event = on_msg_event
         self._on_result = on_msg_result
         self._on_error = on_msg_error
+        self._on_connection = on_connection
 
         self.conn_lock = threading.Condition()
 
-    def connect_ws(self, url):
+    def connect_ws(self, url, locked=True):
 
         if self.wsa:
             self.wsa.close()
 
+        # Initialize websocket parameters
         self.wsa = websocket.WebSocketApp(
             url=url,
             on_message=self._received_message,
@@ -35,11 +38,16 @@ class MopidyWSManager(object):
             on_open=self._ws_open,
             on_close=self._ws_close)
 
+        # Run the websocket in parallel thread
         self.wsa_thread = threading.Thread(
             target=self.wsa.run_forever,
             name='WSA-Thread')
         self.wsa_thread.setDaemon(True)
         self.wsa_thread.start()
+
+        # Return immediately if locked is not set
+        if not locked:
+            return
 
         # Wait for the WSA Thread to attemp the connection
         with self.conn_lock:
@@ -50,23 +58,27 @@ class MopidyWSManager(object):
 
     @debug_function
     def _ws_error(self, *args, **kwargs):
-        with self.conn_lock:
-            self.connected = False
-            self.conn_lock.notify()
+        pass
 
-    @debug_function
     def _ws_open(self, *args, **kwargs):
-        with self.conn_lock:
-            self.connected = True
-            self.conn_lock.notify()
+        self._connection_change(connected=True)            
 
-    @debug_function
     def _ws_close(self, *args, **kwargs):        
+        self._connection_change(connected=False)
+    
+    @debug_function
+    def _connection_change(self, connected):
         with self.conn_lock:
-            self.connected = False          
+            self.connected = connected
             self.conn_lock.notify()
+            
+        if self._on_connection:
+            threading.Thread(
+                target=self._on_connection,
+                args=(self.connected, ),                        
+                ).start()
 
-    def send_message(self, id_msg, method, **params):
+    def send_json_message(self, id_msg, method, **params):
         '''
         Generates the json-rpc message and sends it to the webserver
             method: the mopidy method to call

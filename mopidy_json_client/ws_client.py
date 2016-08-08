@@ -14,33 +14,47 @@ class SimpleClient(object):
 
     def __init__(self,
                  server_addr='localhost:6680',
-                 event_handler=None,
+                 event_handler=None,                 
                  error_handler=None,
+                 connection_handler=None,
                  ):
 
         # Event and error handlers
         self.event_handler = event_handler
         self.error_handler = error_handler
+        self.connection_handler = connection_handler
 
         # Connection to Mopidy Websocket Server
         ws_url = 'ws://' + server_addr + '/mopidy/ws'
         self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
-                                          on_msg_error=self._handle_error)
+                                          on_msg_error=self._handle_error,
+                                          on_connection=self._connection_handler)
 
         self.ws_manager.connect_ws(url=ws_url)
 
         # Request Queue
-        self.request_queue = RequestQueue(send_function=self.ws_manager.send_message)
+        self.request_queue = RequestQueue(send_function=self._send_message)
 
         # Core controller
-        self.core = CoreController(self.request_queue.make_request)
+        self.core = CoreController(self._server_request)
+
+    def _server_request(self, *args, **kwargs):        
+        return self.request_queue.make_request(*args, **kwargs)
+
+    def _send_message(self, id_msg, method, **params):
+        self.ws_manager.send_json_message(id_msg, method, **params)
+
+    def _connection_handler(self, ws_connected):
+        if self.connection_handler:
+            self.connection_handler(ws_connected)
 
     def _handle_result(self, id_msg, result):
         self.request_queue.result_handler(id_msg, result)
 
     def _handle_error(self, id_msg, error):
-        self.request_queue.result_handler(id_msg, None)
+        if id_msg:
+            self.request_queue.result_handler(id_msg, None)
         if self.error_handler:
             self.error_handler(error)
         else:
@@ -83,9 +97,9 @@ class MopidyClient(SimpleClient):
         logger.info('Connected to Mopidy Server, API version: %s', version)
 
         # Load mopidy JSON/RPC methods
-        self.playback = methods.PlaybackController(self.request_queue.make_request)
-        self.mixer = methods.MixerController(self.request_queue.make_request)
-        self.tracklist = methods.TracklistController(self.request_queue.make_request)
-        self.playlists = methods.PlaylistsController(self.request_queue.make_request)
-        self.library = methods.LibraryController(self.request_queue.make_request)
-        self.history = methods.HistoryController(self.request_queue.make_request)
+        self.playback = methods.PlaybackController(self._server_request)
+        self.mixer = methods.MixerController(self._server_request)
+        self.tracklist = methods.TracklistController(self._server_request)
+        self.playlists = methods.PlaylistsController(self._server_request)
+        self.library = methods.LibraryController(self._server_request)
+        self.history = methods.HistoryController(self._server_request)
