@@ -34,7 +34,7 @@ class MopidyWSManager(object):
         self.wsa = websocket.WebSocketApp(
             url=url,
             on_message=self._received_message,
-            on_error=self._ws_error,                                          
+            on_error=self._ws_error,
             on_open=self._ws_open,
             on_close=self._ws_close)
 
@@ -51,31 +51,28 @@ class MopidyWSManager(object):
 
         # Wait for the WSA Thread to attemp the connection
         with self.conn_lock:
-            self.conn_lock.wait(5)        
+            self.conn_lock.wait(5)
 
         return self.connected
 
-
-    @debug_function
     def _ws_error(self, *args, **kwargs):
         pass
 
     def _ws_open(self, *args, **kwargs):
-        self._connection_change(connected=True)            
+        self._connection_change(connected=True)
 
-    def _ws_close(self, *args, **kwargs):        
+    def _ws_close(self, *args, **kwargs):
         self._connection_change(connected=False)
-    
-    @debug_function
+
     def _connection_change(self, connected):
         with self.conn_lock:
             self.connected = connected
             self.conn_lock.notify()
-            
+
         if self._on_connection:
             threading.Thread(
                 target=self._on_connection,
-                args=(self.connected, ),                        
+                args=(self.connected, ),
                 ).start()
 
     def send_json_message(self, id_msg, method, **params):
@@ -124,17 +121,19 @@ class MopidyWSManager(object):
 
                 if self._on_error:
                     threading.Thread(
+                        name='Error-ID%d' % msg_data['id'],
                         target=self._on_error,
                         kwargs={'id_msg': msg_data['id'],
-                                'error': compact_error_data}
+                                'error': compact_error_data},
                         ).start()
 
             else:
                 if self._on_result:
                     threading.Thread(
+                        name='Result-ID%d' % msg_data['id'],
                         target=self._on_result,
                         kwargs={'id_msg': msg_data['id'],
-                                'result': result_data},                        
+                                'result': result_data},
                         ).start()
 
         # Mopidy CoreListener Event

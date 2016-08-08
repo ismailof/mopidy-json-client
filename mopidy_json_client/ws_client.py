@@ -14,7 +14,7 @@ class SimpleClient(object):
 
     def __init__(self,
                  server_addr='localhost:6680',
-                 event_handler=None,                 
+                 event_handler=None,
                  error_handler=None,
                  connection_handler=None,
                  ):
@@ -29,7 +29,7 @@ class SimpleClient(object):
         self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
                                           on_msg_error=self._handle_error,
-                                          on_connection=self._connection_handler)
+                                          on_connection=self._handle_connection)
 
         self.ws_manager.connect_ws(url=ws_url)
 
@@ -39,13 +39,14 @@ class SimpleClient(object):
         # Core controller
         self.core = CoreController(self._server_request)
 
-    def _server_request(self, *args, **kwargs):        
+    def _server_request(self, *args, **kwargs):
         return self.request_queue.make_request(*args, **kwargs)
 
     def _send_message(self, id_msg, method, **params):
         self.ws_manager.send_json_message(id_msg, method, **params)
 
-    def _connection_handler(self, ws_connected):
+    def _handle_connection(self, ws_connected):
+        logger.info('[CONNECTION] Status: %s', ws_connected)
         if self.connection_handler:
             self.connection_handler(ws_connected)
 

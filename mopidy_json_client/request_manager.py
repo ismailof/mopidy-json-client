@@ -1,5 +1,9 @@
 import time
+import logging
 from functools import partial
+
+
+logger = logging.getLogger(__name__)
 
 
 class RequestQueue (object):
@@ -65,7 +69,11 @@ class RequestQueue (object):
             if time.time() - self.requests[id_msg]['start_time'] > self.requests[id_msg]['timeout']:
                 # TODO: raise Error right
                 # raise TimeoutError('Time-out on request')
-                print('[TIMEOUT] On request: %s (%d secs)' % (self.requests[id_msg]['method'], self.requests[id_msg]['timeout']))
+                #'[TIMEOUT] On request: {method}s ({timeout}d secs)'.format(self.requests[id_msg]))
+                logger.info('[TIMEOUT] On request: %s (%d secs)',
+                            self.requests[id_msg]['method'],
+                            self.requests[id_msg]['timeout'])
+
                 return None
             time.sleep(0.1)  # To save resouces
         result = self.requests[id_msg]['result']

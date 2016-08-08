@@ -81,7 +81,7 @@ class MopidyWSCLI(SimpleListener):
 
         setter(new_value)
 
-    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):        
+    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):
 
         if args:
             arg_value = args[0]
@@ -102,7 +102,7 @@ class MopidyWSCLI(SimpleListener):
             elif arg_value:
                 return
 
-            new_value = current_value + step * relative * res 
+            new_value = current_value + step * relative * res
             new_value = max(new_value, 0)
 
             setter(new_value)
@@ -122,6 +122,7 @@ class MopidyWSCLI(SimpleListener):
         # Exit demo program
         if (command == 'exit'):
             self.mopidy.close()
+            time.sleep(0.2)
             exit()
 
         # Core methods
@@ -150,8 +151,12 @@ class MopidyWSCLI(SimpleListener):
                         value = int(words[1]) if unicode(words[1]).isnumeric() \
                             else words[1]
                         kwargs.update({key: value})
-                    result = self.mopidy.core.send(args[0], timeout=40, **kwargs)
+                    if 'timeout' not in kwargs:
+                        kwargs['timeout'] = 40
+
+                    result = self.mopidy.core.send(args[0], **kwargs)
                     print_nice('Result: ', result)
+
                 except Exception as ex:
                     print_nice('Exception: ', ex, format='error')
             else:
@@ -264,16 +269,16 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'browse'):
             uri = self.gen_uris(args)[0]
             result = self.mopidy.library.browse(uri=uri, timeout=30)
-            print_nice('[REQUEST] Browsing %s :' % uri, result, format='browse')
+            print_nice('> Browsing %s :' % uri, result, format='browse')
 
         elif (command in ['info', 'lookup', 'detail']):
             info = self.mopidy.library.lookup(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Lookup on URIs: ', info,
+            print_nice('> Lookup on URIs: ', info,
                        format='expand' if command == 'detail' else 'lookup')
 
         elif (command in ['image', 'images']):
             images = self.mopidy.library.get_images(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Images for URIs :', images, format='images')
+            print_nice('> Images for URIs :', images, format='images')
 
         elif (command == 'search'):
             if args:
@@ -298,7 +303,7 @@ class MopidyWSCLI(SimpleListener):
 
     # Request callbacks
     def show_search_results(self, search_results):
-        print_nice('[REQUEST] Search Results: ', search_results, format='search')
+        print_nice('> Search Results: ', search_results, format='search')
         if self.save_results:
             with open('result_search.json', 'w') as json_file:
                 json.dump(search_results, json_file)
