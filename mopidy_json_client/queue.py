@@ -19,10 +19,10 @@ class RequestQueue (object):
                      timeout=None,
                      **params):
 
-        # If no option is passed (callback nor timeout) send a notification (no waiting for response)
-        if not on_result and not timeout:
-            self._send_message(None, method, params)
-            return None
+        ## If no option is passed (callback nor timeout) send a notification (no waiting for response)
+        #if not on_result and not timeout:
+            #self._send_message(None, method, params)
+            #return None
 
         # Increase Message ID
         self.id_msg += 1

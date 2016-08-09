@@ -2,9 +2,11 @@ import logging
 from distutils.version import LooseVersion
 
 from .mopidy_api import CoreController
-from .ws_manager import MopidyWSManager
+from .connection import MopidyWSManager
 from .listener import MopidyListener
-from .request_manager import RequestQueue
+from .queue import RequestQueue
+
+from debug import debug_function
 
 
 logger = logging.getLogger(__name__)
@@ -17,27 +19,47 @@ class SimpleClient(object):
                  event_handler=None,
                  error_handler=None,
                  connection_handler=None,
+                 autoconnect=True,
+                 reconnect_tries=3,
+                 reconnect_secs=5
                  ):
 
         # Event and error handlers
         self.event_handler = event_handler
         self.error_handler = error_handler
         self.connection_handler = connection_handler
-
-        # Connection to Mopidy Websocket Server
-        ws_url = 'ws://' + server_addr + '/mopidy/ws'
+        
+        # Reconnect
+        #self.reconnect = reconnect        
+        
+        # Init WebSocket manager
         self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
                                           on_msg_error=self._handle_error,
                                           on_connection=self._handle_connection)
-
-        self.ws_manager.connect_ws(url=ws_url)
+        
+        # Connection to Mopidy Websocket Server
+        ws_url = 'ws://' + server_addr + '/mopidy/ws'
+        self.ws_url = ws_url
+        
+        if autoconnect:                 
+            self.ws_manager.connect_ws(url=self.ws_url)
 
         # Request Queue
         self.request_queue = RequestQueue(send_function=self._send_message)
 
         # Core controller
         self.core = CoreController(self._server_request)
+
+    def connect(self):        
+        self.ws_manager.connect_ws()
+
+    def disconnect(self):
+        self.reconnect = False
+        self.ws_manager.close()
+    
+    def is_connected(self):
+        return self.ws_manager.connected
 
     def _server_request(self, *args, **kwargs):
         return self.request_queue.make_request(*args, **kwargs)
@@ -46,7 +68,9 @@ class SimpleClient(object):
         self.ws_manager.send_json_message(id_msg, method, **params)
 
     def _handle_connection(self, ws_connected):
-        logger.info('[CONNECTION] Status: %s', ws_connected)
+        logger.info('[CONNECTION] Status: %s', ws_connected)       
+        
+        # Report to client user
         if self.connection_handler:
             self.connection_handler(ws_connected)
 
@@ -54,8 +78,6 @@ class SimpleClient(object):
         self.request_queue.result_handler(id_msg, result)
 
     def _handle_error(self, id_msg, error):
-        if id_msg:
-            self.request_queue.result_handler(id_msg, None)
         if self.error_handler:
             self.error_handler(error)
         else:
@@ -65,16 +87,16 @@ class SimpleClient(object):
     def _handle_event(self, event, event_data):
         if self.event_handler:
             self.event_handler(event, **event_data)
-
-    def close(self):
-        self.ws_manager.close()
-
+    
 
 class MopidyClient(SimpleClient):
 
     listener = None
 
-    def __init__(self, event_handler=None, **kwargs):
+    def __init__(self, 
+                 event_handler=None, 
+                 version='2.0',
+                 **kwargs):
 
         # If no event_handler is selected start an internal one
         if event_handler is None:
@@ -85,7 +107,8 @@ class MopidyClient(SimpleClient):
         super(MopidyClient, self).__init__(event_handler=event_handler, **kwargs)
 
         # Select Mopidy API version methods
-        version = self.core.get_version(timeout=20)
+        if not version:
+            version = self.core.get_version(timeout=5)
 
         assert version is not None, 'Could not get Mopidy API version from server'
         assert LooseVersion(version) >= LooseVersion('1.1'), 'Mopidy API version %s is not supported' % version
@@ -104,3 +127,4 @@ class MopidyClient(SimpleClient):
         self.playlists = methods.PlaylistsController(self._server_request)
         self.library = methods.LibraryController(self._server_request)
         self.history = methods.HistoryController(self._server_request)
+

@@ -9,7 +9,7 @@ import json
 
 
 class MopidyWSCLI(SimpleListener):
-
+    
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
@@ -17,15 +17,23 @@ class MopidyWSCLI(SimpleListener):
         client_log = logging.getLogger('mopidy_json_client')
         client_log.setLevel(logging.DEBUG)
 
+        # Init variables
+        self.state = 'stopped'        
+        self.uri = None
+        self.save_results = False
+
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(event_handler=self.on_event,
                                    error_handler=self.on_server_error)
 
+        if self.mopidy.is_connected():
+            self.init_player_state()
+
+    def init_player_state(self):
         # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
         self.uri = tl_track['track'].get('uri') if tl_track else None
-        self.save_results = False
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
@@ -121,9 +129,24 @@ class MopidyWSCLI(SimpleListener):
     def execute_command(self, command, args=[]):
         # Exit demo program
         if (command == 'exit'):
-            self.mopidy.close()
+            self.mopidy.disconnect()
             time.sleep(0.2)
             exit()
+
+        # Connection methods
+        elif (command == 'connect'):
+            if self.mopidy.is_connected():
+                print '> WebSocket is already Connected'
+                return
+            
+            self.mopidy.connect()
+
+        elif (command == 'disconnect'):
+            if not self.mopidy.is_connected():
+                print '> WebSocket is already Disconnected'
+                return
+            
+            self.mopidy.disconnect()
 
         # Core methods
         elif (command == 'api'):
