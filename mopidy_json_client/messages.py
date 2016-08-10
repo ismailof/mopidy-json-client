@@ -7,6 +7,19 @@ import threading
 logger = logging.getLogger(__name__)
 
 
+class RequestTimeOutError(Exception):
+
+    def __init__(self, method, timeout, *args, **kwargs):
+        super(RequestTimeOutError, self).__init__(*args, **kwargs)
+        self.method = method
+        self.timeout = timeout
+
+    def __str__(self):
+        return '[TIMEOUT] On request: %s (%d secs)' % (
+            self.method,
+            self.timeout)
+
+
 class RequestMessage(object):
 
     msg_counter = 0
@@ -49,13 +62,7 @@ class RequestMessage(object):
     def wait_for_result(self):
         while self.locked:
             if time.time() - self.start_time > self.timeout:
-                # TODO: raise Error right
-                # raise TimeoutError('Time-out on request')
-                #'[TIMEOUT] On request: {method}s ({timeout}d secs)'.format(self.requests[id_msg]))
-                logger.info('[TIMEOUT] On request: %s (%d secs)',
-                            self.method,self.timeout)
-
-                return None
+                raise RequestTimeOutError(self.method, self.timeout)
             time.sleep(0.1)  # To save resouces
         return self.result
 
@@ -78,14 +85,17 @@ class ResponseMessage(object):
 
     @classmethod
     def parse_json_message(self, message):
-         # Unpack received message
+        # Unpack received message
         msg_data = json.loads(message)
 
-        # JSON-RPC Message(response to a request)
         if 'jsonrpc' in msg_data:
+            # JSON-RPC Message(response to a request)
+
             # Check for integrity
-            assert msg_data['jsonrpc'] == '2.0', 'Wrong JSON-RPC version: %s' % msg_data['jsonrpc']
-            assert 'id' in msg_data, 'JSON-RPC message has no id'
+            assert msg_data['jsonrpc'] == '2.0', \
+                'Wrong JSON-RPC version: %s' % msg_data['jsonrpc']
+            assert 'id' in msg_data, \
+                'JSON-RPC message has no id'
 
             # Process received message
             msg_id = msg_data.get('id')
@@ -97,8 +107,8 @@ class ResponseMessage(object):
                     name='Error-ID%d' % msg_id,
                     target=self._on_error,
                     kwargs={'id_msg': msg_id,
-                            'error': self.format_app_error(error_data)},
-                    ).start()
+                            'error': ErrorMessage.format_app_error(error_data)},
+                ).start()
 
             # Send result even if 'None' to close request
             if self._on_result:
@@ -107,23 +117,24 @@ class ResponseMessage(object):
                     target=self._on_result,
                     kwargs={'id_msg': msg_id,
                             'result': result_data},
-                    ).start()
+                ).start()
 
-        # Mopidy CoreListener Event
         elif 'event' in msg_data:
+            # Mopidy CoreListener Event
             if self._on_event:
                 event = msg_data.pop('event')
                 threading.Thread(
                     target=self._on_event,
                     kwargs={'event': event,
                             'event_data': msg_data}
-                    ).start()
+                ).start()
 
-        # Received not-parseable message
         else:
-            #print ('Unparseable JSON-RPC message received: %s', message=message)
+            # Received non-parseable message
             logger.warning('Unparseable JSON-RPC message received', message=message)
 
+
+class ErrorMessage(object):
 
     @staticmethod
     def format_app_error(input_error):

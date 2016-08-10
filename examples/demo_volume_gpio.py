@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import sys
 from mopidy_json_client import MopidyClient
 from gpio_controls import RotaryEncoder, MomentarySwitch
 from time import sleep
@@ -43,7 +42,7 @@ class VolumeGPIO(object):
 
     def update_mute(self, mute):
         self.mute = mute
-        
+
     def close(self):
         self.c_volume.close()
         self.c_mute.close()
@@ -64,7 +63,7 @@ if __name__ == '__main__':
         while True:
             sleep(0.2)
     except KeyboardInterrupt:
-        pass   
+        pass
 
 #    c_volume.close()
 #    exit(0)
