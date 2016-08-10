@@ -9,8 +9,6 @@ from .messages import RequestMessage, ResponseMessage
 from .mopidy_api import CoreController
 from .listener import MopidyListener
 
-from debug import debug_function
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +58,6 @@ class SimpleClient(object):
 
     ## Connection public functions ##
 
-    #@debug_function
     def connect(self, url=None, wait_secs=0):
         if self.is_connected():
             logger.warning('WebSocket is already connected to %s',
@@ -86,7 +83,6 @@ class SimpleClient(object):
 
         return self.is_connected()
 
-    #@debug_function
     def disconnect(self):
         self.reconnect_try = None
         if not self.is_connected():
@@ -100,7 +96,6 @@ class SimpleClient(object):
 
     ## Connection internal functions ##
 
-    #@debug_function
     def _ws_connect(self):
         # Initialize websocket parameters
         self.wsa = websocket.WebSocketApp(
@@ -117,7 +112,6 @@ class SimpleClient(object):
         self.wsa_thread.setDaemon(True)
         self.wsa_thread.start()
 
-    #@debug_function
     def _ws_reconnect(self):
         # Try to reconnect until number of attemps
         if self.reconnect_try is None:
@@ -146,24 +140,20 @@ class SimpleClient(object):
                            self.reconnect_max)
             pass
 
-    #@debug_function
     def _ws_error(self, *args, **kwargs):
         pass
 
-    #@debug_function
     def _ws_open(self, *args, **kwargs):
         logger.debug('[CONNECTION] WebSocket is connected to %s',
                      self.ws_url)
         self._connection_changed(connected=True)
 
-    #@debug_function
     def _ws_close(self, *args, **kwargs):
         if self.is_connected():
             logger.info('[CONNECTION] Server has disconnected')
             self._connection_changed(connected=False)
         self._ws_reconnect()
 
-    #@debug_function
     def _connection_changed(self, connected):
         with self.conn_lock:
             self.connected = connected
