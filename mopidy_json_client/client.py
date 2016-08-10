@@ -1,10 +1,11 @@
 import logging
+import time
 from distutils.version import LooseVersion
 
 from .mopidy_api import CoreController
 from .connection import MopidyWSManager
 from .listener import MopidyListener
-from .queue import RequestQueue
+from .messages import RequestMessage
 
 from debug import debug_function
 
@@ -13,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleClient(object):
+    
+    request_queue = []
 
     def __init__(self,
                  server_addr='localhost:6680',
@@ -43,16 +46,13 @@ class SimpleClient(object):
         self.ws_url = ws_url
         
         if autoconnect:                 
-            self.ws_manager.connect_ws(url=self.ws_url)
-
-        # Request Queue
-        self.request_queue = RequestQueue(send_function=self._send_message)
+            self.connect()
 
         # Core controller
         self.core = CoreController(self._server_request)
 
-    def connect(self):        
-        self.ws_manager.connect_ws()
+    def connect(self):
+        self.ws_manager.connect_ws(url=self.ws_url)
 
     def disconnect(self):
         self.reconnect = False
@@ -61,11 +61,11 @@ class SimpleClient(object):
     def is_connected(self):
         return self.ws_manager.connected
 
-    def _server_request(self, *args, **kwargs):
-        return self.request_queue.make_request(*args, **kwargs)
-
-    def _send_message(self, id_msg, method, **params):
-        self.ws_manager.send_json_message(id_msg, method, **params)
+    def _server_request(self, method, **kwargs):
+        request = RequestMessage(method, **kwargs)
+        self.request_queue.append(request)
+        self.ws_manager.send_json_message(request.json_message)
+        return request.wait_for_result()
 
     def _handle_connection(self, ws_connected):
         logger.info('[CONNECTION] Status: %s', ws_connected)       
@@ -75,7 +75,12 @@ class SimpleClient(object):
             self.connection_handler(ws_connected)
 
     def _handle_result(self, id_msg, result):
-        self.request_queue.result_handler(id_msg, result)
+        for request in self.request_queue:
+            if request.id_msg == id_msg:
+                request.callback(result)
+                self.request_queue.remove(request)
+                return            
+        logger.warning('Recieved message (id %d) does not match any request', id_msg)
 
     def _handle_error(self, id_msg, error):
         if self.error_handler:

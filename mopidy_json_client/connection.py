@@ -2,8 +2,12 @@ import websocket
 import json
 import threading
 import time
+import logging
 
 from debug import debug_function
+
+
+logger = logging.getLogger(__name__)
 
 
 class MopidyWSManager(object):
@@ -25,7 +29,6 @@ class MopidyWSManager(object):
 
         self.conn_lock = threading.Condition()
 
-    @debug_function
     def connect_ws(self, url=None, locked=True):
         
         if url:
@@ -71,7 +74,7 @@ class MopidyWSManager(object):
     def _ws_close(self, *args, **kwargs):
         self._connection_change(connected=False)
 
-    @debug_function
+    #@debug_function
     def _connection_change(self, connected):
         with self.conn_lock:
             self.connected = connected
@@ -138,34 +141,20 @@ class MopidyWSManager(object):
             print('Unparseable JSON-RPC message received', message)
             #logger.warning('Unparseable JSON-RPC message received', message=message)
 
-    # Compose JSON request message
-    def format_json_msg(self, id_msg, method, **params):
-        '''
-        Generates the json-rpc message
-            id_msg: the json-rpc message identifier
-            method: the mopidy method to call
-            **paramters: adittional parameters passed to the method
-        '''
-        json_msg = {
-            "id": id_msg,
-            "method": method,
-            "params": params,
-            "jsonrpc": "2.0"}
-        message = json.dumps(json_msg)
-
     # Compose custom error message
-    def format_error_msg(self, error_data):
+    @staticmethod
+    def format_error_msg(error_data):
         
         compact_error_data = {}
         
         compact_error_data['title'] = error_data.get('message')
         inner_data = error_data.get('data')        
-        if type(inner_data) in {str, unicode}:
+        if isinstance(inner_data, basestring):
             compact_error_data['error'] = inner_data        
         elif 'message' in error_data:
             compact_error_data['error'] = inner_data.get('message')
             compact_error_data['type'] = inner_data.get('type')
-            compact_error_data['traceback'] = inner_data.get('traceback')        
+            compact_error_data['traceback'] = inner_data.get('traceback')
         else:
             compact_error_data['error'] = 'Error #' + error_data.get('code')
 
