@@ -56,7 +56,7 @@ class SimpleClient(object):
         # Core controller
         self.core = CoreController(self._server_request)
 
-    ## Connection public functions ##
+    # Connection public functions
 
     def connect(self, url=None, wait_secs=0):
         if self.is_connected():
@@ -94,7 +94,7 @@ class SimpleClient(object):
         with self.conn_lock:
             return self.connected
 
-    ## Connection internal functions ##
+    # Connection internal functions
 
     def _ws_connect(self):
         # Initialize websocket parameters
@@ -113,30 +113,26 @@ class SimpleClient(object):
         self.wsa_thread.start()
 
     def _ws_reconnect(self):
-        # Try to reconnect until number of attemps
-        if self.reconnect_try is None:
-            logger.debug('[CONNECTION] Reconnection disabled')
-            return
 
         if self.reconnect_max < 0:
             # Infinite attemps
-            time.sleep (self.reconnect_secs)
+            time.sleep(self.reconnect_secs)
             logger.debug('[CONNECTION] Reconnecting to sever',
-                        self.reconnect_secs)
+                         self.reconnect_secs)
             self._ws_connect()
             return
 
         if self.reconnect_try < self.reconnect_max:
             # Limited attemps
-            time.sleep (self.reconnect_secs)
+            time.sleep(self.reconnect_secs)
             self.reconnect_try += 1
             logger.debug('[CONNECTION] Reconnecting to sever. Attemp %d/%d',
-                        self.reconnect_try,
-                        self.reconnect_max)
+                         self.reconnect_try,
+                         self.reconnect_max)
             self._ws_connect()
         else:
             # TODO: Exception Max Retries unsuccessfull
-            logger.warning('[CONNECTION] Reached maximum attemps to reconnect (%d)',
+            logger.warning('[CONNECTION] Reached maximum of attemps to reconnect (%d)',
                            self.reconnect_max)
             pass
 
@@ -152,7 +148,9 @@ class SimpleClient(object):
         if self.is_connected():
             logger.info('[CONNECTION] Server has disconnected')
             self._connection_changed(connected=False)
-        self._ws_reconnect()
+
+        if self.reconnect_try is not None:
+            self._ws_reconnect()
 
     def _connection_changed(self, connected):
         with self.conn_lock:
@@ -163,24 +161,31 @@ class SimpleClient(object):
             threading.Thread(
                 target=self.connection_handler,
                 args=(self.connected, ),
-                ).start()
+            ).start()
 
-    ## Websocket request and response ##
+    # Websocket request and response
 
     def _server_request(self, method, **kwargs):
+
         request = RequestMessage(method, **kwargs)
         self.request_queue.append(request)
-        self.wsa.send(request.json_message)
-        server_result = request.wait_for_result()
+
+        try:
+            self.wsa.send(request.json_message)
+            server_result = request.wait_for_result()
+        except Exception as ex:
+            logger.exception(ex)
+            return None
+
         return server_result
 
     def _server_response(self, ws, message):
         try:
             ResponseMessage.parse_json_message(message)
         except Exception as ex:
-            print ex
+            logger.exception(ex)
 
-    ## Higher level handlers ##
+    # Higher level handlers
 
     def _handle_connection(self, ws_connected):
         logger.info('[CONNECTION] Status: %s', ws_connected)
@@ -247,4 +252,3 @@ class MopidyClient(SimpleClient):
         self.playlists = methods.PlaylistsController(self._server_request)
         self.library = methods.LibraryController(self._server_request)
         self.history = methods.HistoryController(self._server_request)
-

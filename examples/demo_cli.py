@@ -71,8 +71,8 @@ class MopidyWSCLI(SimpleListener):
                   }
         uri = self.uri
         prompt_line = 'Mopidy %s>> ' % (
-            '{%s}(%s)' % (symbol[self.state], uri) if self.mopidy.is_connected()
-                else '[OFFLINE]')
+            '{%s}(%s)' % (symbol[self.state], uri)
+            if self.mopidy.is_connected() else '[OFFLINE]')
         user_input = raw_input(prompt_line)
         command_line = user_input.strip(' \t\n\r').split(' ')
 
@@ -321,6 +321,7 @@ class MopidyWSCLI(SimpleListener):
                 print ("  Unknown command '%s'" % command)
 
     # Request callbacks
+
     def show_search_results(self, search_results):
         print_nice('> Search Results: ', search_results, format='search')
         if self.save_results:
@@ -339,7 +340,6 @@ class MopidyWSCLI(SimpleListener):
             with open('result_playlists.json', 'w') as json_file:
                 json.dump(playlists, json_file)
 
-
     def show_history(self, history):
         print_nice('> History: ', history, format='history')
         if self.save_results:
@@ -347,10 +347,12 @@ class MopidyWSCLI(SimpleListener):
                 json.dump(history, json_file)
 
     # Server Error Handler
+
     def on_server_error(self, error):
         print_nice('[SERVER_ERROR] ', error, format='error')
 
     # Mopidy Corelistener Events
+
     def stream_title_changed(self, title):
         print_nice('> Stream Title: ', title)
 

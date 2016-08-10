@@ -71,4 +71,3 @@ class MomentarySwitch(object):
             Thread(target=self._cb_hold).start()
 
         self._pushed = False
-    
