@@ -9,10 +9,11 @@ It makes use of `websocket_client <https://github.com/liris/websocket_client>`_
 
 Current version supports Mopidy 1.1 and Mopidy 2.0 JSON/RPC API methods and events. API version of Mopidy server will be automatically detected and used.
 
-For now, connection/disconnection details are not handled. Mopidy-JSON-Client just assumes a running version of Mopidy server accesible via the HTTP Websockets interface. Otherwise, an Exception will be raised.
+From version 0.5.0, a major refactoring in code has been done. Now it handles connection and disconnection to the Websocket. By default it will keep trying to reconnect to the mopidy Websocket when the connection is lost. It can includes the functions `connect()`. `disconnect()` and `is_connected()`
+
+** This package is yet to be largely improved, so package API changes can be expected in any version **. API to Mopidy calls will remain.
 
 Pending features:
-  - connection/disconnection management
   - exception handling
   - some refactoring needed
 
@@ -47,6 +48,12 @@ Project resources
 
 Changelog
 =========
+
+v0.5.2 (UNRELEASED)
+----------------------------------------
+- Handle connection/disconnection to server WebSocket
+- Important internal refactoring
+
 
 v0.4.8 (UNRELEASED)
 ----------------------------------------

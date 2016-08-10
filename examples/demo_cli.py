@@ -17,15 +17,24 @@ class MopidyWSCLI(SimpleListener):
         client_log = logging.getLogger('mopidy_json_client')
         client_log.setLevel(logging.DEBUG)
 
+        # Init variables
+        self.state = 'stopped'
+        self.uri = None
+        self.save_results = False
+
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(event_handler=self.on_event,
-                                   error_handler=self.on_server_error)
+                                   error_handler=self.on_server_error,
+                                   reconnect_max=4)
 
+        if self.mopidy.is_connected():
+            self.init_player_state()
+
+    def init_player_state(self):
         # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
         self.uri = tl_track['track'].get('uri') if tl_track else None
-        self.save_results = False
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
@@ -61,7 +70,10 @@ class MopidyWSCLI(SimpleListener):
                   None: '--',
                   }
         uri = self.uri
-        user_input = raw_input('%s {%s}(%s)>> ' % ('MoPiDy', symbol[self.state], uri))
+        prompt_line = 'Mopidy %s>> ' % (
+            '{%s}(%s)' % (symbol[self.state], uri) if self.mopidy.is_connected()
+                else '[OFFLINE]')
+        user_input = raw_input(prompt_line)
         command_line = user_input.strip(' \t\n\r').split(' ')
 
         command = command_line[0].lower()
@@ -81,7 +93,7 @@ class MopidyWSCLI(SimpleListener):
 
         setter(new_value)
 
-    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):        
+    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):
 
         if args:
             arg_value = args[0]
@@ -102,7 +114,7 @@ class MopidyWSCLI(SimpleListener):
             elif arg_value:
                 return
 
-            new_value = current_value + step * relative * res 
+            new_value = current_value + step * relative * res
             new_value = max(new_value, 0)
 
             setter(new_value)
@@ -121,8 +133,16 @@ class MopidyWSCLI(SimpleListener):
     def execute_command(self, command, args=[]):
         # Exit demo program
         if (command == 'exit'):
-            self.mopidy.close()
+            self.mopidy.disconnect()
+            time.sleep(0.2)
             exit()
+
+        # Connection methods
+        elif (command == 'connect'):
+            self.mopidy.connect()
+
+        elif (command == 'disconnect'):
+            self.mopidy.disconnect()
 
         # Core methods
         elif (command == 'api'):
@@ -150,8 +170,12 @@ class MopidyWSCLI(SimpleListener):
                         value = int(words[1]) if unicode(words[1]).isnumeric() \
                             else words[1]
                         kwargs.update({key: value})
-                    result = self.mopidy.core.send(args[0], timeout=40, **kwargs)
+                    if 'timeout' not in kwargs:
+                        kwargs['timeout'] = 40
+
+                    result = self.mopidy.core.send(args[0], **kwargs)
                     print_nice('Result: ', result)
+
                 except Exception as ex:
                     print_nice('Exception: ', ex, format='error')
             else:
@@ -264,16 +288,16 @@ class MopidyWSCLI(SimpleListener):
         elif (command == 'browse'):
             uri = self.gen_uris(args)[0]
             result = self.mopidy.library.browse(uri=uri, timeout=30)
-            print_nice('[REQUEST] Browsing %s :' % uri, result, format='browse')
+            print_nice('> Browsing %s :' % uri, result, format='browse')
 
         elif (command in ['info', 'lookup', 'detail']):
             info = self.mopidy.library.lookup(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Lookup on URIs: ', info,
+            print_nice('> Lookup on URIs: ', info,
                        format='expand' if command == 'detail' else 'lookup')
 
         elif (command in ['image', 'images']):
             images = self.mopidy.library.get_images(uris=self.gen_uris(args), timeout=30)
-            print_nice('[REQUEST] Images for URIs :', images, format='images')
+            print_nice('> Images for URIs :', images, format='images')
 
         elif (command == 'search'):
             if args:
@@ -298,7 +322,7 @@ class MopidyWSCLI(SimpleListener):
 
     # Request callbacks
     def show_search_results(self, search_results):
-        print_nice('[REQUEST] Search Results: ', search_results, format='search')
+        print_nice('> Search Results: ', search_results, format='search')
         if self.save_results:
             with open('result_search.json', 'w') as json_file:
                 json.dump(search_results, json_file)

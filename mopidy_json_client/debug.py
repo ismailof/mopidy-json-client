@@ -8,7 +8,11 @@ def debug_function(_function_):
         print('[CALL] %r, args: %r, kwargs: %s' % (_function_.__name__,
                                                    args,
                                                    kwargs))
-        return_value = _function_(*args, **kwargs)
+        try:
+            return_value = _function_(*args, **kwargs)
+        except Exception as ex:
+            print('[EXCEPTION] %r \n %r' % (_function_.__name__, ex))
+
         if return_value is not None:
             print('[RETURN] %r returned %r %r' % (_function_.__name__,
                                                   return_value,
