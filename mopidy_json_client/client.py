@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleClient(object):
-    
+
     request_queue = []
 
     def __init__(self,
@@ -31,21 +31,21 @@ class SimpleClient(object):
         self.event_handler = event_handler
         self.error_handler = error_handler
         self.connection_handler = connection_handler
-        
+
         # Reconnect
-        #self.reconnect = reconnect        
-        
+        #self.reconnect = reconnect
+
         # Init WebSocket manager
         self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
                                           on_msg_result=self._handle_result,
                                           on_msg_error=self._handle_error,
                                           on_connection=self._handle_connection)
-        
+
         # Connection to Mopidy Websocket Server
         ws_url = 'ws://' + server_addr + '/mopidy/ws'
         self.ws_url = ws_url
-        
-        if autoconnect:                 
+
+        if autoconnect:
             self.connect()
 
         # Core controller
@@ -57,7 +57,7 @@ class SimpleClient(object):
     def disconnect(self):
         self.reconnect = False
         self.ws_manager.close()
-    
+
     def is_connected(self):
         return self.ws_manager.connected
 
@@ -68,8 +68,8 @@ class SimpleClient(object):
         return request.wait_for_result()
 
     def _handle_connection(self, ws_connected):
-        logger.info('[CONNECTION] Status: %s', ws_connected)       
-        
+        logger.info('[CONNECTION] Status: %s', ws_connected)
+
         # Report to client user
         if self.connection_handler:
             self.connection_handler(ws_connected)
@@ -79,7 +79,7 @@ class SimpleClient(object):
             if request.id_msg == id_msg:
                 request.callback(result)
                 self.request_queue.remove(request)
-                return            
+                return
         logger.warning('Recieved message (id %d) does not match any request', id_msg)
 
     def _handle_error(self, id_msg, error):
@@ -92,14 +92,14 @@ class SimpleClient(object):
     def _handle_event(self, event, event_data):
         if self.event_handler:
             self.event_handler(event, **event_data)
-    
+
 
 class MopidyClient(SimpleClient):
 
     listener = None
 
-    def __init__(self, 
-                 event_handler=None, 
+    def __init__(self,
+                 event_handler=None,
                  version='2.0',
                  **kwargs):
 

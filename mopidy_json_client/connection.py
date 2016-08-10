@@ -30,7 +30,7 @@ class MopidyWSManager(object):
         self.conn_lock = threading.Condition()
 
     def connect_ws(self, url=None, locked=True):
-        
+
         if url:
             self.ws_url = url
 
@@ -65,7 +65,7 @@ class MopidyWSManager(object):
     @debug_function
     def _ws_error(self, *args, **kwargs):
         pass
-    
+
     @debug_function
     def _ws_open(self, *args, **kwargs):
         self._connection_change(connected=True)
@@ -85,7 +85,7 @@ class MopidyWSManager(object):
                 target=self._on_connection,
                 args=(self.connected, ),
                 ).start()
-            
+
         # Try to reconnect
         if not self.connected:
             time.sleep (5)
@@ -117,7 +117,7 @@ class MopidyWSManager(object):
                             'error': format_error_msg(error_data)},
                     ).start()
 
-            # Send result even if 'None' to close request            
+            # Send result even if 'None' to close request
             if self._on_result:
                 threading.Thread(
                     name='Result-ID%d' % msg_id,
@@ -144,13 +144,13 @@ class MopidyWSManager(object):
     # Compose custom error message
     @staticmethod
     def format_error_msg(error_data):
-        
+
         compact_error_data = {}
-        
+
         compact_error_data['title'] = error_data.get('message')
-        inner_data = error_data.get('data')        
+        inner_data = error_data.get('data')
         if isinstance(inner_data, basestring):
-            compact_error_data['error'] = inner_data        
+            compact_error_data['error'] = inner_data
         elif 'message' in error_data:
             compact_error_data['error'] = inner_data.get('message')
             compact_error_data['type'] = inner_data.get('type')

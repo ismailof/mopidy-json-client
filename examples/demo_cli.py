@@ -9,7 +9,7 @@ import json
 
 
 class MopidyWSCLI(SimpleListener):
-    
+ImageCache
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
@@ -18,7 +18,7 @@ class MopidyWSCLI(SimpleListener):
         client_log.setLevel(logging.DEBUG)
 
         # Init variables
-        self.state = 'stopped'        
+        self.state = 'stopped'
         self.uri = None
         self.save_results = False
 
@@ -138,14 +138,14 @@ class MopidyWSCLI(SimpleListener):
             if self.mopidy.is_connected():
                 print '> WebSocket is already Connected'
                 return
-            
+
             self.mopidy.connect()
 
         elif (command == 'disconnect'):
             if not self.mopidy.is_connected():
                 print '> WebSocket is already Disconnected'
                 return
-            
+
             self.mopidy.disconnect()
 
         # Core methods
