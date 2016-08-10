@@ -24,7 +24,8 @@ class MopidyWSCLI(SimpleListener):
 
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(event_handler=self.on_event,
-                                   error_handler=self.on_server_error)
+                                   error_handler=self.on_server_error,
+                                   reconnect_max=4)
 
         if self.mopidy.is_connected():
             self.init_player_state()
@@ -69,8 +70,8 @@ class MopidyWSCLI(SimpleListener):
                   None: '--',
                   }
         uri = self.uri
-        prompt_line = 'Mopidy %s>> ' % ( 
-            '{%s}(%s)' % (symbol[self.state], uri) if self.mopidy.is_connected() 
+        prompt_line = 'Mopidy %s>> ' % (
+            '{%s}(%s)' % (symbol[self.state], uri) if self.mopidy.is_connected()
                 else '[OFFLINE]')
         user_input = raw_input(prompt_line)
         command_line = user_input.strip(' \t\n\r').split(' ')
@@ -138,17 +139,9 @@ class MopidyWSCLI(SimpleListener):
 
         # Connection methods
         elif (command == 'connect'):
-            if self.mopidy.is_connected():
-                print '> WebSocket is already Connected'
-                return
-
             self.mopidy.connect()
 
         elif (command == 'disconnect'):
-            if not self.mopidy.is_connected():
-                print '> WebSocket is already Disconnected'
-                return
-
             self.mopidy.disconnect()
 
         # Core methods

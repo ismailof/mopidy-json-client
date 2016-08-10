@@ -1,11 +1,13 @@
-import logging
 import time
+import threading
+import logging
 from distutils.version import LooseVersion
 
+import websocket
+
+from .messages import RequestMessage, ResponseMessage
 from .mopidy_api import CoreController
-from .connection import MopidyWSManager
 from .listener import MopidyListener
-from .messages import RequestMessage
 
 from debug import debug_function
 
@@ -17,14 +19,18 @@ class SimpleClient(object):
 
     request_queue = []
 
+    connected = False
+    wsa = None
+    wsa_thread = None
+
     def __init__(self,
                  server_addr='localhost:6680',
                  event_handler=None,
                  error_handler=None,
                  connection_handler=None,
                  autoconnect=True,
-                 reconnect_tries=3,
-                 reconnect_secs=5
+                 reconnect_max=-1,
+                 reconnect_secs=10
                  ):
 
         # Event and error handlers
@@ -32,40 +38,159 @@ class SimpleClient(object):
         self.error_handler = error_handler
         self.connection_handler = connection_handler
 
-        # Reconnect
-        #self.reconnect = reconnect
+        # Init WebSocketApp items
+        self.conn_lock = threading.Condition()
+        self.reconnect_max = reconnect_max
+        self.reconnect_secs = reconnect_secs
+        self.reconnect_try = 0 if reconnect_max else None
 
-        # Init WebSocket manager
-        self.ws_manager = MopidyWSManager(on_msg_event=self._handle_event,
-                                          on_msg_result=self._handle_result,
-                                          on_msg_error=self._handle_error,
-                                          on_connection=self._handle_connection)
+        ResponseMessage.set_handlers(on_msg_event=self._handle_event,
+                                     on_msg_result=self._handle_result,
+                                     on_msg_error=self._handle_error)
 
         # Connection to Mopidy Websocket Server
         ws_url = 'ws://' + server_addr + '/mopidy/ws'
         self.ws_url = ws_url
 
         if autoconnect:
-            self.connect()
+            self.connect(wait_secs=5)
 
         # Core controller
         self.core = CoreController(self._server_request)
 
-    def connect(self):
-        self.ws_manager.connect_ws(url=self.ws_url)
+    ## Connection public functions ##
 
+    #@debug_function
+    def connect(self, url=None, wait_secs=0):
+        if self.is_connected():
+            logger.warning('WebSocket is already connected to %s',
+                           self.ws_url)
+            return True
+
+        if url:
+            self.ws_url = url
+
+        # Set reconnection attemp
+        self.reconnect_try = 0 if self.reconnect_max else None
+
+        # Do connection attemp
+        self._ws_connect()
+
+        # Return immediately if not waiting required
+        if not wait_secs:
+            return None
+
+        # Wait for the WSA Thread to attemp the connection
+        with self.conn_lock:
+            self.conn_lock.wait(wait_secs)
+
+        return self.is_connected()
+
+    #@debug_function
     def disconnect(self):
-        self.reconnect = False
-        self.ws_manager.close()
+        self.reconnect_try = None
+        if not self.is_connected():
+            logger.warning('WebSocket is already disconnected')
+
+        self.wsa.close()
 
     def is_connected(self):
-        return self.ws_manager.connected
+        with self.conn_lock:
+            return self.connected
+
+    ## Connection internal functions ##
+
+    #@debug_function
+    def _ws_connect(self):
+        # Initialize websocket parameters
+        self.wsa = websocket.WebSocketApp(
+            url=self.ws_url,
+            on_message=self._server_response,
+            on_error=self._ws_error,
+            on_open=self._ws_open,
+            on_close=self._ws_close)
+
+        # Run the websocket in parallel thread
+        self.wsa_thread = threading.Thread(
+            target=self.wsa.run_forever,
+            name='WSA-Thread')
+        self.wsa_thread.setDaemon(True)
+        self.wsa_thread.start()
+
+    #@debug_function
+    def _ws_reconnect(self):
+        # Try to reconnect until number of attemps
+        if self.reconnect_try is None:
+            logger.debug('[CONNECTION] Reconnection disabled')
+            return
+
+        if self.reconnect_max < 0:
+            # Infinite attemps
+            time.sleep (self.reconnect_secs)
+            logger.debug('[CONNECTION] Reconnecting to sever',
+                        self.reconnect_secs)
+            self._ws_connect()
+            return
+
+        if self.reconnect_try < self.reconnect_max:
+            # Limited attemps
+            time.sleep (self.reconnect_secs)
+            self.reconnect_try += 1
+            logger.debug('[CONNECTION] Reconnecting to sever. Attemp %d/%d',
+                        self.reconnect_try,
+                        self.reconnect_max)
+            self._ws_connect()
+        else:
+            # TODO: Exception Max Retries unsuccessfull
+            logger.warning('[CONNECTION] Reached maximum attemps to reconnect (%d)',
+                           self.reconnect_max)
+            pass
+
+    #@debug_function
+    def _ws_error(self, *args, **kwargs):
+        pass
+
+    #@debug_function
+    def _ws_open(self, *args, **kwargs):
+        logger.debug('[CONNECTION] WebSocket is connected to %s',
+                     self.ws_url)
+        self._connection_changed(connected=True)
+
+    #@debug_function
+    def _ws_close(self, *args, **kwargs):
+        if self.is_connected():
+            logger.info('[CONNECTION] Server has disconnected')
+            self._connection_changed(connected=False)
+        self._ws_reconnect()
+
+    #@debug_function
+    def _connection_changed(self, connected):
+        with self.conn_lock:
+            self.connected = connected
+            self.conn_lock.notify()
+
+        if self.connection_handler:
+            threading.Thread(
+                target=self.connection_handler,
+                args=(self.connected, ),
+                ).start()
+
+    ## Websocket request and response ##
 
     def _server_request(self, method, **kwargs):
         request = RequestMessage(method, **kwargs)
         self.request_queue.append(request)
-        self.ws_manager.send_json_message(request.json_message)
-        return request.wait_for_result()
+        self.wsa.send(request.json_message)
+        server_result = request.wait_for_result()
+        return server_result
+
+    def _server_response(self, ws, message):
+        try:
+            ResponseMessage.parse_json_message(message)
+        except Exception as ex:
+            print ex
+
+    ## Higher level handlers ##
 
     def _handle_connection(self, ws_connected):
         logger.info('[CONNECTION] Status: %s', ws_connected)

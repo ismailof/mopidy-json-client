@@ -1,5 +1,5 @@
 __author__ = 'Ismael Asensio (ismailof@github.com)'
-__version__ = '0.5.1'
+__version__ = '0.5.2'
 
 __all__ = [
     'MopidyClient',
@@ -9,6 +9,7 @@ __all__ = [
 ]
 
 import logging
+
 from .client import MopidyClient, SimpleClient
 from .listener import MopidyListener, SimpleListener
 
