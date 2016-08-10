@@ -9,7 +9,7 @@ import json
 
 
 class MopidyWSCLI(SimpleListener):
-ImageCache
+
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
@@ -69,7 +69,10 @@ ImageCache
                   None: '--',
                   }
         uri = self.uri
-        user_input = raw_input('%s {%s}(%s)>> ' % ('MoPiDy', symbol[self.state], uri))
+        prompt_line = 'Mopidy %s>> ' % ( 
+            '{%s}(%s)' % (symbol[self.state], uri) if self.mopidy.is_connected() 
+                else '[OFFLINE]')
+        user_input = raw_input(prompt_line)
         command_line = user_input.strip(' \t\n\r').split(' ')
 
         command = command_line[0].lower()
