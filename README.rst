@@ -22,10 +22,10 @@ Installation
 ============
 
 Install by running:
-
+``
     git clone git@github.com:ismailof/mopidy-json-client
     sudo pip install mopidy-json-client
-
+``
 
 Usage
 =====
@@ -49,11 +49,15 @@ Project resources
 Changelog
 =========
 
+v0.5.6 (UNRELEASED)
+----------------------------------------
+- Retry connection if lost (parameters `retry_max` and `retry_secs`)
+- Debug option (paramter `debug`)
+
 v0.5.2 (UNRELEASED)
 ----------------------------------------
 - Handle connection/disconnection to server WebSocket
 - Important internal refactoring
-
 
 v0.4.8 (UNRELEASED)
 ----------------------------------------
