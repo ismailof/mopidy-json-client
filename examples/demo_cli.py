@@ -128,7 +128,7 @@ class MopidyWSCLI(SimpleListener):
     def set_debug(self, value, **kwargs):
         self.debug_flag = value
         self.mopidy.debug_client(self.debug_flag)
-        print ('> Debuggin mopidy-json-client : %s' % self.debug_flag)
+        print ('> Debugging mopidy-json-client : %s' % self.debug_flag)
 
     def get_save_results(self, **kwargs):
         return self.save_results

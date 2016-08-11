@@ -49,7 +49,8 @@ class SimpleListener(CoreListener):
     # Called when an event is produced
     def on_event(self, event, **event_data):
         # Log event
-        args_text = ['%s=%r' % (arg, type(value)) for arg, value in event_data.iteritems()]
+        args_text = ['%s=%r' % (arg, value)
+                     for arg, value in event_data.iteritems()]
         logger.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
         # Call overriden function attached to the event
         super(SimpleListener, self).on_event(event, **event_data)
