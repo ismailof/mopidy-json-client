@@ -81,7 +81,7 @@ class SimpleClient(object):
 
         # Do connection attemp
         logger.debug('[CONNECTION] Connecting to Mopidy Sever at %s',
-                         self.ws_url)
+                     self.ws_url)
         self._ws_connect()
 
         # Return immediately if not waiting required
@@ -146,7 +146,6 @@ class SimpleClient(object):
             # TODO: Exception Max Retries unsuccessfull
             logger.warning('[CONNECTION] Reached maximum of attemps to reconnect (%d)',
                            self.retry_max)
-
 
     def _ws_error(self, *args, **kwargs):
         pass
@@ -251,8 +250,6 @@ class MopidyClient(SimpleClient):
             import methods_2_0 as methods
         elif LooseVersion(version) >= LooseVersion('1.1'):
             import methods_1_1 as methods
-
-        #logger.info('Connected to Mopidy Server, API version: %s', version)
 
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self._server_request)
