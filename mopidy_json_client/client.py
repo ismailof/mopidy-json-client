@@ -10,7 +10,7 @@ from .mopidy_api import CoreController
 from .listener import MopidyListener
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('mopidy_json_client')
 
 
 class SimpleClient(object):
@@ -28,8 +28,12 @@ class SimpleClient(object):
                  connection_handler=None,
                  autoconnect=True,
                  retry_max=-1,
-                 retry_secs=10
+                 retry_secs=10,
+                 debug=False,
                  ):
+
+        # Set the debug level
+        self.debug_client(debug)
 
         # Event and error handlers
         self.event_handler = event_handler
@@ -56,12 +60,17 @@ class SimpleClient(object):
         # Core controller
         self.core = CoreController(self._server_request)
 
+    def debug_client(self, debug_value=True):
+        logger.setLevel(
+            logging.DEBUG if debug_value else logging.INFO)
+
     # Connection public functions
 
     def connect(self, url=None, wait_secs=0):
         if self.is_connected():
-            logger.warning('WebSocket is already connected to %s',
-                           self.ws_url)
+            logger.warning(
+                '[CONNECTION] Already connected to Mopidy Server at %s',
+                self.ws_url)
             return True
 
         if url:
@@ -71,6 +80,8 @@ class SimpleClient(object):
         self.retry_attemp = 0 if self.retry_max else None
 
         # Do connection attemp
+        logger.debug('[CONNECTION] Connecting to Mopidy Sever at %s',
+                         self.ws_url)
         self._ws_connect()
 
         # Return immediately if not waiting required
@@ -86,7 +97,8 @@ class SimpleClient(object):
     def disconnect(self):
         self.retry_attemp = None
         if not self.is_connected():
-            logger.warning('WebSocket is already disconnected')
+            logger.warning('[CONNECTION] Already disconnected to Mopidy Server')
+            return
 
         self.wsa.close()
 
@@ -112,45 +124,44 @@ class SimpleClient(object):
         self.wsa_thread.setDaemon(True)
         self.wsa_thread.start()
 
-    def _ws_reconnect(self):
+    def _ws_retry(self):
 
         if self.retry_max < 0:
             # Infinite attemps
             time.sleep(self.retry_secs)
-            logger.debug('[CONNECTION] Reconnecting to sever',
+            logger.debug('[CONNECTION] Reconnecting to Mopidy Sever',
                          self.retry_secs)
             self._ws_connect()
-            return
 
-        if self.retry_attemp < self.retry_max:
+        elif self.retry_attemp < self.retry_max:
             # Limited attemps
             time.sleep(self.retry_secs)
             self.retry_attemp += 1
-            logger.debug('[CONNECTION] Reconnecting to sever. Attemp %d/%d',
+            logger.debug('[CONNECTION] Reconnecting to Mopidy Sever. Attemp %d/%d',
                          self.retry_attemp,
                          self.retry_max)
             self._ws_connect()
+
         else:
             # TODO: Exception Max Retries unsuccessfull
             logger.warning('[CONNECTION] Reached maximum of attemps to reconnect (%d)',
                            self.retry_max)
-            pass
+
 
     def _ws_error(self, *args, **kwargs):
         pass
 
     def _ws_open(self, *args, **kwargs):
-        logger.debug('[CONNECTION] WebSocket is connected to %s',
-                     self.ws_url)
+        logger.info('[CONNECTION] Mopidy Server is connected')
         self._connection_changed(connected=True)
 
     def _ws_close(self, *args, **kwargs):
         if self.is_connected():
-            logger.info('[CONNECTION] Server has disconnected')
+            logger.info('[CONNECTION] Mopidy Sever is disconnected')
             self._connection_changed(connected=False)
 
         if self.retry_attemp is not None:
-            self._ws_reconnect()
+            self._ws_retry()
 
     def _connection_changed(self, connected):
         with self.conn_lock:
@@ -188,8 +199,6 @@ class SimpleClient(object):
     # Higher level handlers
 
     def _handle_connection(self, ws_connected):
-        logger.info('[CONNECTION] Status: %s', ws_connected)
-
         # Report to client user
         if self.connection_handler:
             self.connection_handler(ws_connected)
@@ -243,7 +252,7 @@ class MopidyClient(SimpleClient):
         elif LooseVersion(version) >= LooseVersion('1.1'):
             import methods_1_1 as methods
 
-        logger.info('Connected to Mopidy Server, API version: %s', version)
+        #logger.info('Connected to Mopidy Server, API version: %s', version)
 
         # Load mopidy JSON/RPC methods
         self.playback = methods.PlaybackController(self._server_request)

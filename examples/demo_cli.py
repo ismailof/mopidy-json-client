@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import time
-import logging
 from mopidy_json_client import MopidyClient, SimpleListener
 from mopidy_json_client.formatting import print_nice
 
@@ -13,19 +12,17 @@ class MopidyWSCLI(SimpleListener):
     def __init__(self):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
-        # Set logger debug
-        client_log = logging.getLogger('mopidy_json_client')
-        client_log.setLevel(logging.DEBUG)
-
         # Init variables
         self.state = 'stopped'
         self.uri = None
         self.save_results = False
+        self.debug_flag = False
 
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(event_handler=self.on_event,
                                    error_handler=self.on_server_error,
-                                   retry_max=10)
+                                   retry_max=10
+                                   )
 
         if self.mopidy.is_connected():
             self.init_player_state()
@@ -81,7 +78,8 @@ class MopidyWSCLI(SimpleListener):
 
         return command, args
 
-    def command_on_off(self, args, getter, setter):
+    @staticmethod
+    def command_on_off(args, getter, setter):
         if args:
             if args[0].lower() in {'on', 'yes', 'true'}:
                 new_value = True
@@ -93,7 +91,8 @@ class MopidyWSCLI(SimpleListener):
 
         setter(new_value)
 
-    def command_numeric(self, args, getter, setter, callback=None, step=1, res=1):
+    @staticmethod
+    def command_numeric(args, getter, setter, callback=None, step=1, res=1):
 
         if args:
             arg_value = args[0]
@@ -122,6 +121,14 @@ class MopidyWSCLI(SimpleListener):
         else:
             # No argument, get current value
             getter(on_result=callback)
+
+    def get_debug(self, **kwargs):
+        return self.debug_flag
+
+    def set_debug(self, value, **kwargs):
+        self.debug_flag = value
+        self.mopidy.debug_client(self.debug_flag)
+        print ('> Debuggin mopidy-json-client : %s' % self.debug_flag)
 
     def get_save_results(self, **kwargs):
         return self.save_results
@@ -179,7 +186,12 @@ class MopidyWSCLI(SimpleListener):
                 except Exception as ex:
                     print_nice('Exception: ', ex, format='error')
             else:
-                print('\nUse %s <method> <arg1=vaue1> <arg2=value2> ...' % command)
+                print('Use %s <method> <arg1=vaue1> <arg2=value2> ...\n' % command)
+
+        elif (command == 'debug'):
+            self.command_on_off(args,
+                                getter=self.get_debug,
+                                setter=self.set_debug)
 
         # Get current track and update self.uri
         elif (command == 'track'):
