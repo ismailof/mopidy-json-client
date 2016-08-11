@@ -7,10 +7,10 @@ import threading
 logger = logging.getLogger(__name__)
 
 
-class RequestTimeOutError(Exception):
+class RequestTimeoutError(Exception):
 
     def __init__(self, method, timeout, *args, **kwargs):
-        super(RequestTimeOutError, self).__init__(*args, **kwargs)
+        super(RequestTimeoutError, self).__init__(*args, **kwargs)
         self.method = method
         self.timeout = timeout
 
@@ -62,7 +62,7 @@ class RequestMessage(object):
     def wait_for_result(self):
         while self.locked:
             if time.time() - self.start_time > self.timeout:
-                raise RequestTimeOutError(self.method, self.timeout)
+                raise RequestTimeoutError(self.method, self.timeout)
             time.sleep(0.1)  # To save resouces
         return self.result
 

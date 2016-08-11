@@ -27,8 +27,8 @@ class SimpleClient(object):
                  error_handler=None,
                  connection_handler=None,
                  autoconnect=True,
-                 reconnect_max=-1,
-                 reconnect_secs=10
+                 retry_max=-1,
+                 retry_secs=10
                  ):
 
         # Event and error handlers
@@ -38,9 +38,9 @@ class SimpleClient(object):
 
         # Init WebSocketApp items
         self.conn_lock = threading.Condition()
-        self.reconnect_max = reconnect_max
-        self.reconnect_secs = reconnect_secs
-        self.reconnect_try = 0 if reconnect_max else None
+        self.retry_max = retry_max
+        self.retry_secs = retry_secs
+        self.retry_attemp = 0 if retry_max else None
 
         ResponseMessage.set_handlers(on_msg_event=self._handle_event,
                                      on_msg_result=self._handle_result,
@@ -68,7 +68,7 @@ class SimpleClient(object):
             self.ws_url = url
 
         # Set reconnection attemp
-        self.reconnect_try = 0 if self.reconnect_max else None
+        self.retry_attemp = 0 if self.retry_max else None
 
         # Do connection attemp
         self._ws_connect()
@@ -84,7 +84,7 @@ class SimpleClient(object):
         return self.is_connected()
 
     def disconnect(self):
-        self.reconnect_try = None
+        self.retry_attemp = None
         if not self.is_connected():
             logger.warning('WebSocket is already disconnected')
 
@@ -114,26 +114,26 @@ class SimpleClient(object):
 
     def _ws_reconnect(self):
 
-        if self.reconnect_max < 0:
+        if self.retry_max < 0:
             # Infinite attemps
-            time.sleep(self.reconnect_secs)
+            time.sleep(self.retry_secs)
             logger.debug('[CONNECTION] Reconnecting to sever',
-                         self.reconnect_secs)
+                         self.retry_secs)
             self._ws_connect()
             return
 
-        if self.reconnect_try < self.reconnect_max:
+        if self.retry_attemp < self.retry_max:
             # Limited attemps
-            time.sleep(self.reconnect_secs)
-            self.reconnect_try += 1
+            time.sleep(self.retry_secs)
+            self.retry_attemp += 1
             logger.debug('[CONNECTION] Reconnecting to sever. Attemp %d/%d',
-                         self.reconnect_try,
-                         self.reconnect_max)
+                         self.retry_attemp,
+                         self.retry_max)
             self._ws_connect()
         else:
             # TODO: Exception Max Retries unsuccessfull
             logger.warning('[CONNECTION] Reached maximum of attemps to reconnect (%d)',
-                           self.reconnect_max)
+                           self.retry_max)
             pass
 
     def _ws_error(self, *args, **kwargs):
@@ -149,7 +149,7 @@ class SimpleClient(object):
             logger.info('[CONNECTION] Server has disconnected')
             self._connection_changed(connected=False)
 
-        if self.reconnect_try is not None:
+        if self.retry_attemp is not None:
             self._ws_reconnect()
 
     def _connection_changed(self, connected):

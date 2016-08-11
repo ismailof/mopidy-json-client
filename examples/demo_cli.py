@@ -25,7 +25,7 @@ class MopidyWSCLI(SimpleListener):
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(event_handler=self.on_event,
                                    error_handler=self.on_server_error,
-                                   reconnect_max=4)
+                                   retry_max=10)
 
         if self.mopidy.is_connected():
             self.init_player_state()
