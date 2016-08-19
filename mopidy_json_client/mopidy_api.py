@@ -11,9 +11,13 @@ class MopidyWSController(object):
         self._request_handler_ = request_handler
 
     def mopidy_request(self, method, **kwargs):
-        args_text = ['%s=%r' % (arg, value)
-                     for arg, value in kwargs.iteritems()]
-        logger.debug('[REQUEST] %s (%s)' % (method, ', '.join(args_text)))
+        try:
+            args_text = ['%s=%r' % (arg, value)
+                         for arg, value in kwargs.iteritems()]
+            logger.debug('[REQUEST] %s (%s)' % (method, ', '.join(args_text)))
+        except Exception as ex:
+            logger.exception(ex)
+
         return self._request_handler_(method, **kwargs)
 
 

@@ -1,22 +1,23 @@
 #!/usr/bin/python
 
 import time
+import sys
+import json
+
 from mopidy_json_client import MopidyClient, SimpleListener
 from mopidy_json_client.formatting import print_nice
-
-import json
 
 
 class MopidyWSCLI(SimpleListener):
 
-    def __init__(self):
+    def __init__(self, debug=False):
         print 'Starting Mopidy Websocket Client CLI DEMO ...'
 
         # Init variables
         self.state = 'stopped'
         self.uri = None
         self.save_results = False
-        self.debug_flag = False
+        self.debug_flag = debug
 
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(
@@ -25,6 +26,8 @@ class MopidyWSCLI(SimpleListener):
             error_handler=self.on_server_error,
             retry_max=10
         )
+
+        self.mopidy.debug_client(self.debug_flag)
 
         if self.mopidy.is_connected():
             self.init_player_state()
@@ -397,7 +400,13 @@ class MopidyWSCLI(SimpleListener):
 
 
 if __name__ == '__main__':
-    demo = MopidyWSCLI()
+
+    debug = False
+    if len(sys.argv) > 1 and sys.argv[1] == '-v':
+        debug = True
+
+    demo = MopidyWSCLI(debug=debug)
+
     while True:
         command, args = demo.prompt()
         if command != '':
