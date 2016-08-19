@@ -22,7 +22,7 @@ class SimpleClient(object):
     wsa_thread = None
 
     def __init__(self,
-                 server_addr='localhost:6680',
+                 ws_url='ws://localhost:6680/mopidy/ws',
                  event_handler=None,
                  error_handler=None,
                  connection_handler=None,
@@ -35,24 +35,21 @@ class SimpleClient(object):
         # Set the debug level
         self.debug_client(debug)
 
-        # Event and error handlers
+        # Set event and error handlers
         self.event_handler = event_handler
         self.error_handler = error_handler
         self.connection_handler = connection_handler
-
-        # Init WebSocketApp items
-        self.conn_lock = threading.Condition()
-        self.retry_max = retry_max
-        self.retry_secs = retry_secs
-        self.retry_attemp = 0 if retry_max else None
 
         ResponseMessage.set_handlers(on_msg_event=self._handle_event,
                                      on_msg_result=self._handle_result,
                                      on_msg_error=self._handle_error)
 
         # Connection to Mopidy Websocket Server
-        ws_url = 'ws://' + server_addr + '/mopidy/ws'
+        self.conn_lock = threading.Condition()
         self.ws_url = ws_url
+        self.retry_max = retry_max
+        self.retry_secs = retry_secs
+        self.retry_attemp = 0 if retry_max else None
 
         if autoconnect:
             self.connect(wait_secs=5)
@@ -66,15 +63,15 @@ class SimpleClient(object):
 
     # Connection public functions
 
-    def connect(self, url=None, wait_secs=0):
+    def connect(self, ws_url=None, wait_secs=0):
         if self.is_connected():
             logger.warning(
                 '[CONNECTION] Already connected to Mopidy Server at %s',
                 self.ws_url)
             return True
 
-        if url:
-            self.ws_url = url
+        if ws_url:
+            self.ws_url = ws_url
 
         # Set reconnection attemp
         self.retry_attemp = 0 if self.retry_max else None
