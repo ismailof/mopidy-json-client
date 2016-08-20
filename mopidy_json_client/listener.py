@@ -77,7 +77,8 @@ class MopidyListener(SimpleListener):
         if event not in self.bindings:
             self.bindings[event] = []
         # logger.debug("Bind callback <%s> to event '%s'" % (callback.__name__, event))
-        self.bindings[event].append(callback)
+        if callback not in self.bindings[event]:
+            self.bindings[event].append(callback)
 
     def unbind(self, event, callback):
         if event not in self.bindings:

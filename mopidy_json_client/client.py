@@ -255,3 +255,7 @@ class MopidyClient(SimpleClient):
         self.playlists = methods.PlaylistsController(self._server_request)
         self.library = methods.LibraryController(self._server_request)
         self.history = methods.HistoryController(self._server_request)
+
+    def bind_event(self, event, callback):
+        logger.debug('[LISTENER] Binding %s to event %s', callback, event)
+        self.listener.bind(event, callback)

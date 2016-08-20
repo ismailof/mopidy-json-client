@@ -5,7 +5,7 @@ from .listener import MopidyListener, SimpleListener
 
 
 __author__ = 'Ismael Asensio (ismailof@github.com)'
-__version__ = '0.5.7'
+__version__ = '0.5.8'
 
 __all__ = [
     'MopidyClient',
