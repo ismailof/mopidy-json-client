@@ -11,7 +11,7 @@ Current version supports Mopidy 1.1 and Mopidy 2.0 JSON/RPC API methods and even
 
 From version 0.5.0, a major refactoring in code has been done. Now it handles connection and disconnection to the Websocket. By default it will keep trying to reconnect to the mopidy Websocket when the connection is lost. It can includes the functions `connect()`. `disconnect()` and `is_connected()`
 
-** This package is yet to be largely improved, so package API changes can be expected in any version **. API to Mopidy calls will remain.
+**This package is yet to be largely improved, so package API changes can be expected in any version**. API to Mopidy calls will remain.
 
 Pending features:
   - exception handling
@@ -22,10 +22,13 @@ Installation
 ============
 
 Install by running:
-``
-    git clone git@github.com:ismailof/mopidy-json-client
-    sudo pip install mopidy-json-client
-``
+``git clone git@github.com:ismailof/mopidy-json-client``
+or 
+``git clone https://github.com/ismailof/mopidy-json-client``, 
+and then   
+``sudo pip install mopidy-json-client``
+
+This module is not yet upload to PyPI repository. I'm looking forward to it in a near future.
 
 Usage
 =====
