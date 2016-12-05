@@ -49,7 +49,6 @@ class SimpleClient(object):
         self.ws_url = ws_url
         self.retry_max = retry_max
         self.retry_secs = retry_secs
-        self.retry_attemp = 0 if retry_max else None
 
         if autoconnect:
             self.connect(wait_secs=5)
@@ -94,7 +93,7 @@ class SimpleClient(object):
     def disconnect(self):
         self.retry_attemp = None
         if not self.is_connected():
-            logger.warning('[CONNECTION] Already disconnected to Mopidy Server')
+            logger.warning('[CONNECTION] Already disconnected from Mopidy Server')
             return
 
         self.wsa.close()
@@ -126,7 +125,7 @@ class SimpleClient(object):
         if self.retry_max < 0:
             # Infinite attemps
             time.sleep(self.retry_secs)
-            logger.debug('[CONNECTION] Reconnecting to Mopidy Server',
+            logger.info('[CONNECTION] Reconnecting to Mopidy Server',
                          self.retry_secs)
             self._ws_connect()
 
@@ -134,7 +133,7 @@ class SimpleClient(object):
             # Limited attemps
             time.sleep(self.retry_secs)
             self.retry_attemp += 1
-            logger.debug('[CONNECTION] Reconnecting to Mopidy Server. Attemp %d/%d',
+            logger.info('[CONNECTION] Reconnecting to Mopidy Server. Attemp %d/%d',
                          self.retry_attemp,
                          self.retry_max)
             self._ws_connect()
@@ -162,6 +161,7 @@ class SimpleClient(object):
     def _connection_changed(self, connected):
         with self.conn_lock:
             self.connected = connected
+            self.retry_attemp = 0 if self.retry_max else None
             self.conn_lock.notify()
 
         if self.connection_handler:

@@ -1,8 +1,11 @@
 #!/usr/bin/python
+from __future__ import unicode_literals
 
 import time
 import sys
 import json
+
+from builtins import input
 
 from mopidy_json_client import MopidyClient, SimpleListener
 from mopidy_json_client.formatting import print_nice
@@ -36,7 +39,7 @@ class MopidyWSCLI(SimpleListener):
         # Initialize mopidy track and state
         self.state = self.mopidy.playback.get_state(timeout=5)
         tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
-        self.uri = tl_track['track'].get('uri') if tl_track else None
+        self.track_playback_started(tl_track)
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
@@ -73,9 +76,11 @@ class MopidyWSCLI(SimpleListener):
                   }
         uri = self.uri
         prompt_line = 'Mopidy %s>> ' % (
-            '{%s}(%s)' % (symbol[self.state], uri)
-            if self.mopidy.is_connected() else '[OFFLINE]')
-        user_input = raw_input(prompt_line)
+            # '{%s}(%s)' % (symbol[self.state], uri)
+            '(%s)' % (symbol[self.state])
+            if self.mopidy.is_connected() else '[OFFLINE]'
+        )
+        user_input = input(prompt_line).decode(sys.stdin.encoding)
         command_line = user_input.strip(' \t\n\r').split(' ')
 
         command = command_line[0].lower()
@@ -200,9 +205,8 @@ class MopidyWSCLI(SimpleListener):
 
         # Get current track and update self.uri
         elif (command == 'track'):
-            track = self.mopidy.playback.get_current_tl_track(timeout=10)
-            print_nice('Current Track: ', track.get('track') if track else None)
-            self.uri = track['track']['uri'] if track else None
+            tl_track = self.mopidy.playback.get_current_tl_track(timeout=10)
+            self.track_playback_started(tl_track)
 
         elif(command == 'stream'):
             self.mopidy.playback.get_stream_title(on_result=self.stream_title_changed)
@@ -234,11 +238,11 @@ class MopidyWSCLI(SimpleListener):
             self.mopidy.playback.resume()
         elif (command == 'next'):
             self.mopidy.playback.next()
-        elif (command == 'previous'):
+        elif (command in ('prev', 'previous')):
             self.mopidy.playback.previous()
 
         # Mixer commands
-        elif (command in {'vol', 'volume'}):
+        elif (command in ('vol', 'volume')):
             self.command_numeric(args,
                                  getter=self.mopidy.mixer.get_volume,
                                  setter=self.mopidy.mixer.set_volume,
@@ -329,6 +333,8 @@ class MopidyWSCLI(SimpleListener):
             if args:
                 self.uri = self.gen_uris([' '.join(args)])[0]
 
+            print_nice ("> Current URI: ", self.uri)
+
         elif (command == 'save'):
             self.command_on_off(args,
                                 getter=self.get_save_results,
@@ -391,9 +397,9 @@ class MopidyWSCLI(SimpleListener):
         print_nice('Tracklist Options:', options, format='expand')
 
     def track_playback_started(self, tl_track):
-        track = tl_track.get('track')
-        self.uri = track.get('uri')
-        print_nice('> Current Track is ', track, format='track')
+        track = tl_track.get('track') if tl_track else None
+        self.uri = track.get('uri') if track else None
+        print_nice('> Current Track: ', track, format='track')
 
     def seeked(self, time_position):
         print_nice('> Current Position is ', time_position, format='time_position')

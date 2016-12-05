@@ -22,7 +22,7 @@ Installation
 ============
 
 Install by running:
-``git clone git@github.com:ismailof/mopidy-json-client``
+``sudo pip install https://github.com/ismailof/mopidy-json-client/archive/master.zip``
 or 
 ``git clone https://github.com/ismailof/mopidy-json-client``, 
 and then   
