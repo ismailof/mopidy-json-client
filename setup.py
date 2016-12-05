@@ -19,7 +19,7 @@ setup(
     author='Ismael Asensio',
     author_email='isma.af@gmail.com',
     description='Mopidy Client via JSON/RPC Websocket interface',
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     packages=find_packages(exclude=['tests', 'tests.*']),
     zip_safe=False,
     include_package_data=True,
