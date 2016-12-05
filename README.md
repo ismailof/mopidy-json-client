@@ -11,8 +11,15 @@ From version `0.5.0`, a major refactoring in code has been done to allow handlin
 
 **This package is yet to be largely improved, so package API changes can be expected in any version**. API to Mopidy calls will remain.
 
-## Pending features:
-  - better exception handling
+## Usage
+
+mopidy-json-client provides two main classes:
+   - `MopidyClient` : manages the connection and methods to the Mopidy Server
+   - `MopidyListener` : event handler
+
+To ilustrate the use of the module, two examples are provided:
+   - [demo_cli.py](./examples/demo_cli.py) implements a simple Mopidy CLI (Command Line Interface) client.
+   - [demo_volumen_gpio.py](./examples/demo_volumen_gpio.py) controls the volume and mute using a HW RotaryEncoder knob through the RPi.GPIO interface
 
 ## Installation
 
@@ -25,15 +32,8 @@ or
 - `git clone https://github.com/ismailof/mopidy-json-client` 
 - `sudo pip install mopidy-json-client`
 
-## Usage
-
-mopidy-json-client provides two main classes:
-   - `MopidyClient` : manages the connection and methods to the Mopidy Server
-   - `MopidyListener` : event handler
-
-To ilustrate the use of the module, two examples are provided:
-   - [demo_cli.py](./examples/demo_cli.py) implements a simple Mopidy CLI (Command Line Interface) client.
-   - [demo_volumen_gpio.py](./examples/demo_volumen_gpio.py) controls the volume and mute using a HW RotaryEncoder knob through the RPi.GPIO interface
+## Pending features:
+  - better exception handling
 
 ## Project resources
 
