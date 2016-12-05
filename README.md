@@ -2,8 +2,8 @@
 
 Mopidy Client via JSON/RPC Websocket interface
 
-This module generates a python interface which maps the `Mopidy Core API [https://mopidy.readthedocs.org/en/latest/api/core]` methods and events, as described in `mopidy.readthedocs.org/en/latest/api/core [https://mopidy.readthedocs.org/en/latest/api/core]` .
-It makes use of `[websocket_client] :https://github.com/liris/websocket_client`
+This module generates a python interface which maps the [Mopidy Core API](https://mopidy.readthedocs.org/en/latest/api/core) methods and events, as described in <https://mopidy.readthedocs.org/en/latest/api/core>.
+It makes use of [websocket_client](https://github.com/liris/websocket_client)
 
 Current version supports Mopidy 1.1 and Mopidy 2.0 JSON/RPC API methods and events. API version of Mopidy server will be automatically detected and used.
 
@@ -11,20 +11,19 @@ From version 0.5.0, a major refactoring in code has been done. Now it handles co
 
 **This package is yet to be largely improved, so package API changes can be expected in any version**. API to Mopidy calls will remain.
 
-Pending features:
-  - exception handling
-  - some refactoring needed
-
+## Pending features:
+  - better exception handling
 
 ## Installation
 
 This module is not yet upload to PyPI repository. I'm looking forward to it in a near future.
 
 Install by running:
-- ``sudo pip install https://github.com/ismailof/mopidy-json-client/archive/master.zip``
+- `sudo pip install https://github.com/ismailof/mopidy-json-client/archive/master.zip`
+
 or 
-- ``git clone https://github.com/ismailof/mopidy-json-client``, 
-- ``sudo pip install mopidy-json-client``
+- `git clone https://github.com/ismailof/mopidy-json-client` 
+- `sudo pip install mopidy-json-client`
 
 ## Usage
 
@@ -38,7 +37,7 @@ To ilustrate the use of the module, two examples are provided:
 
 ## Project resources
 
-- [Source code]: https://github.com/ismailof/mopidy-json-client
-- [Issue tracker]: <https://github.com/ismailof/mopidy-json-client/issues>`
+- Source code: <https://github.com/ismailof/mopidy-json-client>
+- Issue tracker: <https://github.com/ismailof/mopidy-json-client/issues>
 
 
