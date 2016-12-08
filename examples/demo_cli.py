@@ -27,19 +27,24 @@ class MopidyWSCLI(SimpleListener):
             ws_url='ws://localhost:6680/mopidy/ws',
             event_handler=self.on_event,
             error_handler=self.on_server_error,
-            retry_max=10
+            connection_handler=self.on_connection,
+            autoconnect=False,
+            retry_max=10,
+            retry_secs=10
         )
 
         self.mopidy.debug_client(self.debug_flag)
+        self.mopidy.connect()
 
-        if self.mopidy.is_connected():
-            self.init_player_state()
-
-    def init_player_state(self):
-        # Initialize mopidy track and state
-        self.state = self.mopidy.playback.get_state(timeout=5)
-        tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
-        self.track_playback_started(tl_track)
+    def on_connection(self, conn_state):
+        if conn_state:
+            # Initialize mopidy track and state
+            self.state = self.mopidy.playback.get_state(timeout=5)
+            tl_track = self.mopidy.playback.get_current_tl_track(timeout=15)
+            self.track_playback_started(tl_track)
+        else:
+            self.state = 'stopped'
+            self.uri = None
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
