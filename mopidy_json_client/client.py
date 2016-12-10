@@ -15,12 +15,6 @@ logger = logging.getLogger('mopidy_json_client')
 
 class SimpleClient(object):
 
-    request_queue = []
-
-    connected = False
-    wsa = None
-    wsa_thread = None
-
     def __init__(self,
                  ws_url='ws://localhost:6680/mopidy/ws',
                  event_handler=None,
@@ -32,6 +26,12 @@ class SimpleClient(object):
                  debug=False,
                  ):
 
+        self.request_queue = []
+
+        self._connected = False
+        self.wsa = None
+        self.wsa_thread = None
+
         # Set the debug level
         self.debug_client(debug)
 
@@ -40,9 +40,10 @@ class SimpleClient(object):
         self.error_handler = error_handler
         self.connection_handler = connection_handler
 
-        ResponseMessage.set_handlers(on_msg_event=self._handle_event,
-                                     on_msg_result=self._handle_result,
-                                     on_msg_error=self._handle_error)
+        ResponseMessage.set_handlers(
+            on_msg_event=self._dispatch_event,
+            on_msg_result=self._dispatch_result,
+            on_msg_error=self._dispatch_error)
 
         # Connection to Mopidy Websocket Server
         self.conn_lock = threading.Condition()
@@ -102,7 +103,7 @@ class SimpleClient(object):
 
     def is_connected(self):
         with self.conn_lock:
-            return self.connected
+            return self._connected
 
     # Connection internal functions
 
@@ -136,46 +137,44 @@ class SimpleClient(object):
             # Limited attemps
             time.sleep(self.retry_secs)
             self.retry_attemp += 1
-            logger.debug('[CONNECTION] Reconnecting to Mopidy Server. Attemp %d/%d',
-                         self.retry_attemp,
-                         self.retry_max)
+            logger.debug(
+                '[CONNECTION] Reconnecting to Mopidy Server. Attemp %d/%d',
+                self.retry_attemp,
+                self.retry_max)
             self._ws_connect()
 
         else:
             # TODO: Exception Max Retries unsuccessfull
-            logger.warning('[CONNECTION] Reached maximum of attemps to reconnect (%d)',
-                           self.retry_max)
+            logger.warning(
+                '[CONNECTION] Reached maximum of attemps to reconnect (%d)',
+                self.retry_max)
 
     def _ws_error(self, *args, **kwargs):
         pass
 
     def _ws_open(self, *args, **kwargs):
-        logger.info('[CONNECTION] Mopidy Server is connected at %s',
-                self.ws_url)
-        self._connection_changed(connected=True)
+        logger.info(
+            '[CONNECTION] Mopidy Server is connected at %s',
+            self.ws_url)
+        self._update_status(connected=True)
 
     def _ws_close(self, *args, **kwargs):
         if self.is_connected():
             logger.info('[CONNECTION] Mopidy Server is disconnected')
-            self._connection_changed(connected=False)
+            self._update_status(connected=False)
         else:
-            logger.debug('[CONNECTION] Could not connect to Mopidy Server')
+            logger.debug('[CONNECTION] Connection attemp to Mopidy Server failed')
 
-        if self.retry_attemp is not None:
-            self._ws_retry()
+        self._ws_retry()
 
-    def _connection_changed(self, connected):
+    def _update_status(self, connected):
         with self.conn_lock:
-            self.connected = connected
+            self._connected = connected
             if self.retry_attemp is not None:
                 self.retry_attemp = 0
             self.conn_lock.notify()
 
-        if self.connection_handler:
-            threading.Thread(
-                target=self.connection_handler,
-                args=(self.connected, ),
-            ).start()
+        self._dispatch_connection(self.is_connected())
 
     # Websocket request and response
 
@@ -201,12 +200,15 @@ class SimpleClient(object):
 
     # Higher level handlers
 
-    def _handle_connection(self, ws_connected):
-        # Report to client user
+    def _dispatch_connection(self, conn_status):
+        # Report connection
         if self.connection_handler:
-            self.connection_handler(ws_connected)
+            threading.Thread(
+                target=self.connection_handler,
+                args=(conn_status, ),
+            ).start()
 
-    def _handle_result(self, id_msg, result):
+    def _dispatch_result(self, id_msg, result):
         for request in self.request_queue:
             if request.id_msg == id_msg:
                 request.callback(result)
@@ -214,14 +216,14 @@ class SimpleClient(object):
                 return
         logger.warning('Recieved message (id %d) does not match any request', id_msg)
 
-    def _handle_error(self, id_msg, error):
+    def _dispatch_error(self, id_msg, error):
         if self.error_handler:
             self.error_handler(error)
         else:
             # TODO: Deal Error Messages from Server(raise errors or something)
             pass
 
-    def _handle_event(self, event, event_data):
+    def _dispatch_event(self, event, event_data):
         if self.event_handler:
             self.event_handler(event, **event_data)
 
@@ -247,7 +249,9 @@ class MopidyClient(SimpleClient):
         if not version:
             version = self.core.get_version(timeout=5)
 
-        assert version is not None, 'Could not get Mopidy API version from server'
+        if version is None:
+            logger.warning('Could not get Mopidy API version from server')
+
         assert LooseVersion(version) >= LooseVersion('1.1'), 'Mopidy API version %s is not supported' % version
 
         if LooseVersion(version) >= LooseVersion('2.0'):

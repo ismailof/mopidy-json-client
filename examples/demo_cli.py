@@ -28,9 +28,9 @@ class MopidyWSCLI(SimpleListener):
             event_handler=self.on_event,
             error_handler=self.on_server_error,
             connection_handler=self.on_connection,
-            autoconnect=False,
-            retry_max=10,
-            retry_secs=10
+            autoconnect=True,
+            retry_max=None,
+            retry_secs=5
         )
 
         self.mopidy.debug_client(self.debug_flag)
