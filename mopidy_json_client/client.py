@@ -45,6 +45,9 @@ class SimpleClient(object):
             on_msg_result=self._dispatch_result,
             on_msg_error=self._dispatch_error)
 
+        # Core controller
+        self.core = CoreController(self._server_request)
+
         # Connection to Mopidy Websocket Server
         self.conn_lock = threading.Condition()
         self.ws_url = ws_url
@@ -54,8 +57,6 @@ class SimpleClient(object):
         if autoconnect:
             self.connect(wait_secs=5)
 
-        # Core controller
-        self.core = CoreController(self._server_request)
 
     def debug_client(self, debug_value=True):
         logger.setLevel(
@@ -214,7 +215,7 @@ class SimpleClient(object):
                 request.callback(result)
                 self.request_queue.remove(request)
                 return
-        logger.warning('Recieved message (id %d) does not match any request', id_msg)
+        logger.warning('[RESPONSE] Recieved message id (%d) does not match any request', id_msg)
 
     def _dispatch_error(self, id_msg, error):
         if self.error_handler:

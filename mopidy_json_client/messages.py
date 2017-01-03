@@ -14,10 +14,9 @@ class RequestTimeoutError(Exception):
         self.method = method
         self.timeout = timeout
 
-    def __str__(self):
-        return '[TIMEOUT] On request: %s (%d secs)' % (
-            self.method,
-            self.timeout)
+    def __repr__(self):
+        return '[TIMEOUT] On request: {0} ({1:d} secs)'.format(
+            self.method, self.timeout)
 
 
 class RequestMessage(object):
@@ -53,10 +52,11 @@ class RequestMessage(object):
 
     def compose_json_msg(self):
         json_msg = {
+            'jsonrpc': '2.0',
             'id': self.id_msg,
             'method': self.method,
-            'params': self.params,
-            'jsonrpc': '2.0'}
+            'params': self.params
+        }
         return json.dumps(json_msg)
 
     def wait_for_result(self):
@@ -65,6 +65,9 @@ class RequestMessage(object):
                 raise RequestTimeoutError(self.method, self.timeout)
             time.sleep(0.1)  # To save resouces
         return self.result
+
+    def __repr__(self):
+        return "<RequestMessage id:{0.id} method:'{0.method}'>".format(self)
 
 
 class ResponseMessage(object):

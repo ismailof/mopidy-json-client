@@ -84,6 +84,10 @@ def format_nice(data, format=None):
                                             format_nice(item[1]))
                            for item in data]
             return ''.join(str_history)
+            
+        if format == 'volume':
+            return '%3d [%5s]' % (data,
+                                  '#' * (data * 5 / 100))
 
         if hasattr(data, '__iter__') and '__model__' in data:
 

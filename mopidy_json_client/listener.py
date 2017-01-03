@@ -61,8 +61,11 @@ class MopidyListener(SimpleListener):
         Adds suport for binding callback functions to events using:
         ::meth::bind('<event_name>', <callback_function>)
     '''
-    bindings = {}
     allowed_events = list_mopidy_events()
+
+    def __init__(self, *args, **kwargs):
+        super(MopidyListener, self).__init__(*args, **kwargs)
+        self.bindings = {}
 
     def on_event(self, event, **event_data):
         super(MopidyListener, self).on_event(event, **event_data)
@@ -88,3 +91,8 @@ class MopidyListener(SimpleListener):
             if cb == callback:
                 # logger.debug("Unbind callback <%s> from event '%s'" % (callback.__name__, event))
                 self.bindings[event].pop(index)
+                return
+
+    def clear(self):
+        # logger.debug("%: Clearing all event bindings" % self)
+        self.bindings = {}
