@@ -327,8 +327,18 @@ class MopidyWSCLI(SimpleListener):
 
         elif (command == 'search'):
             if args:
-                uris = [args[0]] if ':' in args[0] else [self.uri]
-                search_terms = args[1:] if ':' in args[0] else args[0:]
+                uris = []
+                search_terms = []
+                for arg in args:
+                    if arg.startswith('#'):
+                        arg = self.gen_uris(arg)
+                    if ':' in arg:
+                        uris.append(arg)
+                    else:
+                        search_terms.append(arg)
+                if not uris:
+                    uris = []
+
                 self.mopidy.library.search(query={'any': search_terms},
                                            uris=uris,
                                            on_result=self.show_search_results)

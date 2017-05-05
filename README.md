@@ -17,7 +17,8 @@ mopidy-json-client provides two main classes:
    - `MopidyClient` : manages the connection and methods to the Mopidy Server
    - `MopidyListener` : event handler
 
-To ilustrate the use of the module, two examples are provided:
+To ilustrate the use of the module, check in the examples folder:
+   - [now_playing.py](./examples/now_playing.py): simple script that prints the song on every track start event
    - [demo_cli.py](./examples/demo_cli.py) implements a simple Mopidy CLI (Command Line Interface) client.
    - [demo_volumen_gpio.py](./examples/demo_volumen_gpio.py) controls the volume and mute using a HW RotaryEncoder knob through the RPi.GPIO interface
 
