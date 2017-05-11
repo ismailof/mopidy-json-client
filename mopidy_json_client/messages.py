@@ -25,7 +25,7 @@ class RequestMessage(object):
 
     def __init__(self, method,
                  on_result=None,
-                 timeout=0,
+                 timeout=20,
                  **params):
 
         self.id_msg = self._next_id_msg()

@@ -1,4 +1,4 @@
-# Mopidy-JSON-Client [![version](https://img.shields.io/badge/version-0.5.9-blue.svg)][CHANGELOG]
+# Mopidy-JSON-Client [![version](https://img.shields.io/badge/version-0.5.14-blue.svg)][CHANGELOG]
 
 Mopidy Client via JSON/RPC Websocket interface
 
