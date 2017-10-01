@@ -8,7 +8,7 @@ def print_track_info(tl_track):
     if not track:
         print 'No Track'
         return
-  
+
     trackinfo = {
         'name': track.get('name'),
         'artists': ', '.join([artist.get('name') for artist in track.get('artists')])

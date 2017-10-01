@@ -1,6 +1,29 @@
 import logging
+from distutils.version import LooseVersion
+
 
 logger = logging.getLogger(__name__)
+
+
+class MopidyAPI(object):
+
+    version = None
+    controllers = None
+    eventlist = None
+
+    @classmethod
+    def set_version(cls, version):
+        assert LooseVersion(version) >= LooseVersion('1.1'), \
+            'Mopidy API version %s is not supported' % version
+        cls.version = version
+
+        if LooseVersion(version) >= LooseVersion('2.0'):
+            import methods_2_0 as methods
+        elif LooseVersion(version) >= LooseVersion('1.1'):
+            import methods_2_0 as methods
+
+        cls.controllers = methods
+        cls.eventlist = methods.mopidy_eventlist
 
 
 class MopidyWSController(object):

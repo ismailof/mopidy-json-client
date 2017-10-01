@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 import time
 import sys
@@ -7,14 +7,16 @@ import json
 
 from builtins import input
 
-from mopidy_json_client import MopidyClient, SimpleListener
+from mopidy_json_client import MopidyClient
 from mopidy_json_client.formatting import print_nice
 
 
-class MopidyWSCLI(SimpleListener):
+class MopidyWSCLI(object):
 
     def __init__(self, debug=False):
-        print 'Starting Mopidy Websocket Client CLI DEMO ...'
+        super(MopidyWSCLI, self).__init__()
+
+        print('Starting Mopidy Websocket Client CLI DEMO ...')
 
         # Init variables
         self.state = 'stopped'
@@ -25,7 +27,6 @@ class MopidyWSCLI(SimpleListener):
         # Instantiate Mopidy Client
         self.mopidy = MopidyClient(
             ws_url='ws://localhost:6680/mopidy/ws',
-            event_handler=self.on_event,
             error_handler=self.on_server_error,
             connection_handler=self.on_connection,
             autoconnect=False,
@@ -34,6 +35,7 @@ class MopidyWSCLI(SimpleListener):
         )
 
         self.mopidy.debug_client(self.debug_flag)
+        self.bind_events()
         self.mopidy.connect()
 
     def on_connection(self, conn_state):
@@ -45,6 +47,15 @@ class MopidyWSCLI(SimpleListener):
         else:
             self.state = 'stopped'
             self.uri = None
+
+    def bind_events(self):
+        self.mopidy.bind_event('playback_state_changed', self.playback_state_changed)
+        self.mopidy.bind_event('stream_title_changed', self.stream_title_changed)
+        self.mopidy.bind_event('options_changed', self.options_changed)
+        self.mopidy.bind_event('volume_changed', self.volume_changed)
+        self.mopidy.bind_event('mute_changed', self.mute_changed)
+        self.mopidy.bind_event('seeked', self.seeked)
+        #self.mopidy.bind_event('audio_message', audio_message)
 
     def gen_uris(self, input_uris=None):
         presets = {'bt': ['bt:stream'],
@@ -143,14 +154,14 @@ class MopidyWSCLI(SimpleListener):
     def set_debug(self, value, **kwargs):
         self.debug_flag = value
         self.mopidy.debug_client(self.debug_flag)
-        print ('> Debugging mopidy-json-client : %s' % self.debug_flag)
+        print('> Debugging mopidy-json-client : %s' % self.debug_flag)
 
     def get_save_results(self, **kwargs):
         return self.save_results
 
     def set_save_results(self, value, **kwargs):
         self.save_results = value
-        print ('> Saving Results to file : %s' % value)
+        print('> Saving Results to file : %s' % value)
 
     def execute_command(self, command, args=[]):
         # Exit demo program
@@ -179,8 +190,10 @@ class MopidyWSCLI(SimpleListener):
                 print_nice('*** MOPIDY CORE API ***', core_api)
 
         elif (command == 'version'):
-            version = self.mopidy.core.get_version(timeout=5)
-            print_nice('Mopidy Core Version: ', version)
+            mopidy_version = self.mopidy.core.get_version(timeout=5)
+            client_version = self.mopidy.get_client_version()
+            print_nice('Mopidy Core Version: ', mopidy_version)
+            print_nice('Mopidy-JSON Client Version: ', client_version)
 
         elif (command == 'send'):
             if args:
@@ -356,7 +369,7 @@ class MopidyWSCLI(SimpleListener):
                                 setter=self.set_save_results)
 
         elif command != '':
-                print ("  Unknown command '%s'" % command)
+                print("  Unknown command '%s'" % command)
 
     # Request callbacks
 
@@ -418,6 +431,10 @@ class MopidyWSCLI(SimpleListener):
 
     def seeked(self, time_position):
         print_nice('> Current Position is ', time_position, format='time_position')
+
+    # def audio_message(self, message):
+        # if message and message['name'] == 'spectrum':
+            # print(''.join(['%d'% (-val//10) for val in message['data']['magnitude']]))
 
 
 if __name__ == '__main__':

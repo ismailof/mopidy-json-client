@@ -1,12 +1,12 @@
 import time
 import threading
 import logging
-from distutils.version import LooseVersion
 
 import websocket
 
+from . import __version__ as client_version
+from .mopidy_api import MopidyAPI, CoreController
 from .messages import RequestMessage, ResponseMessage
-from .mopidy_api import CoreController
 from .listener import MopidyListener
 
 
@@ -56,7 +56,6 @@ class SimpleClient(object):
 
         if autoconnect:
             self.connect(wait_secs=5)
-
 
     def debug_client(self, debug_value=True):
         logger.setLevel(
@@ -231,43 +230,35 @@ class SimpleClient(object):
 
 class MopidyClient(SimpleClient):
 
-    listener = None
-
-    def __init__(self,
-                 event_handler=None,
-                 version='2.0',
-                 **kwargs):
-
-        # If no event_handler is selected start an internal one
-        if event_handler is None:
-            self.listener = MopidyListener()
-            event_handler = self.listener.on_event
+    def __init__(self, version='2.0', **kwargs):
 
         # Init client
-        super(MopidyClient, self).__init__(event_handler=event_handler, **kwargs)
+        super(MopidyClient, self).__init__( **kwargs)
 
         # Select Mopidy API version methods
         if not version:
             version = self.core.get_version(timeout=5)
-
         if version is None:
             logger.warning('Could not get Mopidy API version from server')
 
-        assert LooseVersion(version) >= LooseVersion('1.1'), 'Mopidy API version %s is not supported' % version
+        MopidyAPI.set_version(version)
 
-        if LooseVersion(version) >= LooseVersion('2.0'):
-            import methods_2_0 as methods
-        elif LooseVersion(version) >= LooseVersion('1.1'):
-            import methods_1_1 as methods
+        if not self.event_handler:
+            self.listener = MopidyListener()
+            self.event_handler = self.listener.on_event
 
         # Load mopidy JSON/RPC methods
-        self.playback = methods.PlaybackController(self._server_request)
-        self.mixer = methods.MixerController(self._server_request)
-        self.tracklist = methods.TracklistController(self._server_request)
-        self.playlists = methods.PlaylistsController(self._server_request)
-        self.library = methods.LibraryController(self._server_request)
-        self.history = methods.HistoryController(self._server_request)
+        self.playback = MopidyAPI.controllers.PlaybackController(self._server_request)
+        self.mixer = MopidyAPI.controllers.MixerController(self._server_request)
+        self.tracklist = MopidyAPI.controllers.TracklistController(self._server_request)
+        self.playlists = MopidyAPI.controllers.PlaylistsController(self._server_request)
+        self.library = MopidyAPI.controllers.LibraryController(self._server_request)
+        self.history = MopidyAPI.controllers.HistoryController(self._server_request)
 
     def bind_event(self, event, callback):
         logger.debug('[LISTENER] Binding %s to event %s', callback, event)
         self.listener.bind(event, callback)
+
+    def get_client_version(self):
+        return client_version
+
