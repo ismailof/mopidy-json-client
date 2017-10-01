@@ -1,4 +1,4 @@
-# Mopidy-JSON-Client [![version](https://img.shields.io/badge/version-0.5.14-blue.svg)][CHANGELOG]
+# Mopidy-JSON-Client [![version](https://img.shields.io/badge/version-0.6.0-blue.svg)](./CHANGELOG.md)
 
 Mopidy Client via JSON/RPC Websocket interface
 
@@ -46,7 +46,6 @@ or
 - Source code: <https://github.com/ismailof/mopidy-json-client>
 - Issue tracker: <https://github.com/ismailof/mopidy-json-client/issues>
 
-
-[Mopidy Core API]: https://mopidy.readthedocs.org/en/latest/api/core
-[websocket_client]: https://github.com/liris/websocket_client
-[CHANGELOG]: ./CHANGELOG.md
+## References
+- [Mopidy Core API](https://mopidy.readthedocs.org/en/latest/api/core)
+- [websocket_client](https://github.com/liris/websocket_client)

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - get_client_version() method
 ### Removed
-- MopidyListener are now an internal class. To listen to events use the 'bind' method
+- MopidyListener are now an internal class. To listen to events use the `bind` method
 - No dependencies on Mopidy package
 
 ## [0.5.9] - Unreleased
