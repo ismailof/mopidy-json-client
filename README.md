@@ -14,13 +14,15 @@ From version `0.5.0`, a major refactoring in code has been done to allow handlin
 ## Usage
 
 mopidy-json-client provides a main class `MopidyClient`, which manages the connection and methods to the Mopidy Server.
-Use the `bind` function to subscribe to mopidy events.
+Use the `bind_event` function to subscribe to mopidy events.
 
-    from mopidy_json_client import MopidyClient
+```python
+from mopidy_json_client import MopidyClient
 
-    mopidy = MopidyClient()
-    mopidy.bind_event('track_playback_started', print_track_info)
-    mopidy.playback.play()
+mopidy = MopidyClient()
+mopidy.bind_event('track_playback_started', print_track_info)
+mopidy.playback.play()
+```
 
 To ilustrate the use of the module, check in the examples folder:
    - [now_playing.py](./examples/now_playing.py): simple script that prints the song on every track start event

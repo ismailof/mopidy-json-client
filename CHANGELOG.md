@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.6] - Unreleased
 ### Added
-- get_client_version() method
+- Simplified event binding. To subscribe to events use the `bind_event` method
+- `get_client_version()` method
 ### Removed
-- MopidyListener are now an internal class. To listen to events use the `bind` method
+- Merged `SimpleListener` and `MopidyListener`, and removed exposition
 - No dependencies on Mopidy package
 
 ## [0.5.9] - Unreleased
@@ -27,7 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [0.4.8] - Unreleased
 ### Added
 - API name changes. MopidyClient, SimpleClient, SimpleListener
-- Bind callbacks to events using bind method
+- Bind callbacks to events using `bind` method
 - Examples provided
 - Server errors handling via callback
 
