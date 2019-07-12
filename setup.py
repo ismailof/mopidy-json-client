@@ -25,6 +25,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'setuptools',
+        'websocket-client',
+        'future',
     ],
     entry_points={
     },
