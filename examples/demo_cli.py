@@ -96,7 +96,7 @@ class MopidyWSCLI(object):
             '(%s)' % (symbol[self.state])
             if self.mopidy.is_connected() else '[OFFLINE]'
         )
-        user_input = input(prompt_line).decode(sys.stdin.encoding)
+        user_input = input(prompt_line)
         command_line = user_input.strip(' \t\n\r').split(' ')
 
         command = command_line[0].lower()
@@ -183,7 +183,7 @@ class MopidyWSCLI(object):
 
             if args:
                 filtered_api = {method: desc
-                                for method, desc in core_api.iteritems()
+                                for method, desc in core_api.items()
                                 if any([arg in method for arg in args])}
                 print_nice('*** MOPIDY CORE API [%s] ***' % ', '.join(args), filtered_api)
             else:

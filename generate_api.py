@@ -20,7 +20,7 @@ def generate_controller_code(mopidy_module, methods, version, exclude_parms={'kw
                                                                                      controller_name(mopidy_module),
                                                                                      version))
 
-    for method, info in methods.iteritems():
+    for method, info in methods.items():
         # Method name
         method_name = method.split('.')[2]
         # Parameters
@@ -63,5 +63,5 @@ if __name__ == '__main__':
     api = client.core.describe()
 
     for module in mopidy_modules:
-        methods = {method: info for method, info in api.iteritems() if method.startswith('core.' + module)}
+        methods = {method: info for method, info in api.items() if method.startswith('core.' + module)}
         generate_controller_code(module, methods, version=version)

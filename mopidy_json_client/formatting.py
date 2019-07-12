@@ -58,7 +58,7 @@ def format_nice(data, format=None):
 
         if format == 'images':
             str_uris = []
-            for uri, uri_images in data.iteritems():
+            for uri, uri_images in data.items():
                 list_images = ['\n\t\t' + format_nice(image)
                                for image in uri_images]
                 str_uris.append('\n\t(URI %s)' % uri + ''.join(list_images))
@@ -72,7 +72,7 @@ def format_nice(data, format=None):
 
         if format == 'lookup':
             list_info = []
-            for uri, info in data.iteritems():
+            for uri, info in data.items():
                 list_info += ['\n[URI %s]' % uri]
                 list_info += ['\n\t' + format_nice(item) for item in info]
 
