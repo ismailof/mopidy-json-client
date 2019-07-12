@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import logging
 from distutils.version import LooseVersion
 
@@ -18,9 +20,9 @@ class MopidyAPI(object):
         cls.version = version
 
         if LooseVersion(version) >= LooseVersion('2.0'):
-            import methods_2_0 as methods
+            from . import methods_2_0 as methods
         elif LooseVersion(version) >= LooseVersion('1.1'):
-            import methods_2_0 as methods
+            from . import methods_2_0 as methods
 
         cls.controllers = methods
         cls.eventlist = methods.mopidy_eventlist
@@ -36,7 +38,7 @@ class MopidyWSController(object):
     def mopidy_request(self, method, **kwargs):
         try:
             args_text = ['%s=%r' % (arg, value)
-                         for arg, value in kwargs.iteritems()]
+                         for arg, value in kwargs.items()]
             logger.debug('[REQUEST] %s (%s)' % (method, ', '.join(args_text)))
         except Exception as ex:
             logger.exception(ex)

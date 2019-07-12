@@ -18,7 +18,7 @@ class MopidyListener(object):
     def on_event(self, event, **event_data):
         # Log event
         args_text = ['%s=%r' % (arg, value)
-                 for arg, value in event_data.iteritems()]
+                 for arg, value in event_data.items()]
         logger.debug('[EVENT] %s (%s)' % (event, ', '.join(args_text)))
 
         # Call registered events
