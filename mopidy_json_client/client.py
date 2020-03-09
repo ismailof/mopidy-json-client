@@ -192,7 +192,7 @@ class SimpleClient(object):
 
         return server_result
 
-    def _server_response(self, ws, message):
+    def _server_response(self, message):
         try:
             ResponseMessage.parse_json_message(message)
         except Exception as ex:
